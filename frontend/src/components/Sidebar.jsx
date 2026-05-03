@@ -36,20 +36,20 @@ export const Sidebar = () => {
   );
 
   return (
-    <div className="bg-zinc-950 border-r border-zinc-800 text-amber-400 h-screen w-64 fixed left-0 top-0 flex flex-col" data-testid="sidebar">
-      <div className="p-6 border-b border-zinc-800">
-        <div className="flex items-center gap-3 mb-2">
+    <div className="bg-zinc-950 border-r border-amber-900/30 text-amber-400 h-screen w-64 fixed left-0 top-0 flex flex-col" data-testid="sidebar">
+      <div className="p-6 border-b border-amber-900/30">
+        <div className="flex flex-col items-center gap-3 mb-2">
           <img 
-            src="https://customer-assets.emergentagent.com/job_hotel-booking-table/artifacts/am7dxsds_Gemini_Generated_Image_btdxkwbtdxkwbtdx.png" 
-            alt="VillenManagerExclusiv Logo" 
-            className="w-12 h-12 object-contain"
+            src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
+            alt="Villen Manager Pro Logo" 
+            className="w-20 h-20 object-contain"
           />
-          <div>
-            <h1 className="text-xl font-bold font-heading tracking-tight text-amber-500">VillenManager</h1>
-            <p className="text-xs text-amber-600 uppercase tracking-widest font-semibold">Exclusiv</p>
+          <div className="text-center">
+            <h1 className="text-lg font-bold font-heading tracking-wider text-amber-500">VILLEN MANAGER</h1>
+            <p className="text-xs text-amber-600 uppercase tracking-[0.3em] font-semibold mt-1">PRO</p>
           </div>
         </div>
-        <p className="text-xs text-amber-700 uppercase tracking-wider font-medium">{user?.role}</p>
+        <p className="text-xs text-amber-700 uppercase tracking-wider font-medium text-center mt-3">{user?.role}</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">

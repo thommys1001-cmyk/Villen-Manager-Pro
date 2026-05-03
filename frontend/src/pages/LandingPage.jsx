@@ -3,67 +3,79 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { 
-  Bed, 
-  WifiHigh, 
-  Snowflake, 
-  Coffee,
+  Buildings,
+  House,
+  Key,
+  Bed,
   CaretRight,
   CheckCircle,
-  Star
+  Star,
+  Phone,
+  EnvelopeSimple,
+  WhatsappLogo
 } from '@phosphor-icons/react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
-  const features = [
-    { icon: WifiHigh, title: 'Kostenfreies WLAN', desc: 'Highspeed-Internet in allen Bereichen' },
-    { icon: Snowflake, title: 'Klimatisiert', desc: 'Perfekte Temperatur das ganze Jahr' },
-    { icon: Coffee, title: 'Frühstück', desc: 'Reichhaltiges Buffet inklusive' },
-    { icon: Bed, title: 'Komfort', desc: 'Premium-Matratzen & hochwertige Ausstattung' }
-  ];
-
-  const roomTypes = [
+  const categories = [
     {
-      type: 'Standard',
-      price: 80,
-      image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600',
-      features: ['22 m²', 'Einzelbett/Doppelbett', 'Badezimmer mit Dusche', 'WLAN']
+      icon: Buildings,
+      title: 'Villen',
+      price: 500,
+      description: 'Luxuriöse Villen mit privatem Pool & Garten',
+      image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800'
     },
     {
-      type: 'Deluxe',
+      icon: House,
+      title: 'Ferienhäuser',
+      price: 250,
+      description: 'Gemütliche Ferienhäuser für die ganze Familie',
+      image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'
+    },
+    {
+      icon: Key,
+      title: 'Appartments',
       price: 120,
-      image: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=600',
-      features: ['32 m²', 'Kingsize-Bett', 'Badewanne', 'Balkon', 'Minibar']
+      description: 'Moderne Appartments in bester Lage',
+      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800'
     },
     {
-      type: 'Suite',
-      price: 200,
-      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600',
-      features: ['50 m²', 'Separater Wohnbereich', 'Whirlpool', 'Panoramablick']
+      icon: Bed,
+      title: 'Zimmer',
+      price: 80,
+      description: 'Komfortable Zimmer mit Premium-Ausstattung',
+      image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-zinc-950 text-amber-400">
       {/* Hero Section */}
       <div 
-        className="relative h-[600px] bg-cover bg-center"
+        className="relative h-[700px] bg-cover bg-center"
         style={{
-          backgroundImage: "linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920')"
+          backgroundImage: "linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1920')"
         }}
       >
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4">
-          <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-tight mb-4">
-            Grand Hotel
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <img 
+            src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
+            alt="Villen Manager Pro"
+            className="w-32 h-32 md:w-48 md:h-48 object-contain mb-6"
+          />
+          <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-wider mb-2 text-amber-500">
+            VILLEN MANAGER
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl">
-            Erleben Sie Luxus und Komfort im Herzen der Stadt
+          <p className="text-2xl md:text-3xl tracking-[0.3em] uppercase mb-6 text-amber-600">PRO</p>
+          <p className="text-lg md:text-xl mb-10 max-w-2xl text-amber-300/90">
+            Exklusive Immobilienverwaltung für Villen, Ferienhäuser, Appartments & Zimmer
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Button
               onClick={() => navigate('/book')}
               data-testid="cta-book-now"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 h-auto"
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 text-lg px-8 py-6 h-auto font-bold shadow-xl shadow-amber-500/30"
             >
               Jetzt buchen
               <CaretRight size={24} weight="bold" className="ml-2" />
@@ -71,7 +83,7 @@ export default function LandingPage() {
             <Button
               onClick={() => navigate('/login')}
               variant="outline"
-              className="bg-white/10 backdrop-blur-sm border-white text-white hover:bg-white/20 text-lg px-8 py-6 h-auto"
+              className="bg-transparent border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-zinc-950 text-lg px-8 py-6 h-auto font-semibold"
             >
               Mitarbeiter-Login
             </Button>
@@ -79,105 +91,80 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-zinc-950 font-heading mb-4">
-            Ihre Vorteile
-          </h2>
-          <p className="text-lg text-zinc-600">
-            Alles, was Sie für einen perfekten Aufenthalt benötigen
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, idx) => {
-            const Icon = feature.icon;
-            return (
-              <Card key={idx} className="p-6 text-center hover:shadow-lg transition-shadow">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon size={32} weight="fill" className="text-blue-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-zinc-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-zinc-600">{feature.desc}</p>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Rooms Section */}
-      <div className="bg-zinc-50 py-20">
+      {/* Categories Section */}
+      <div className="py-20 bg-zinc-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-zinc-950 font-heading mb-4">
-              Unsere Zimmer
+            <p className="text-amber-600 text-sm tracking-[0.3em] uppercase mb-3">Unser Portfolio</p>
+            <h2 className="text-4xl md:text-5xl font-bold text-amber-500 font-heading mb-4">
+              Exklusive Kategorien
             </h2>
-            <p className="text-lg text-zinc-600">
-              Wählen Sie aus verschiedenen Kategorien
+            <p className="text-lg text-amber-400/80 max-w-2xl mx-auto">
+              Entdecken Sie unsere sorgfältig ausgewählten Immobilien
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {roomTypes.map((room, idx) => (
-              <Card key={idx} className="overflow-hidden hover:shadow-xl transition-shadow">
-                <div 
-                  className="h-48 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${room.image})` }}
-                />
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-2xl font-bold text-zinc-950 font-heading">{room.type}</h3>
-                    <div className="text-right">
-                      <p className="text-xs text-zinc-500">Ab</p>
-                      <p className="text-2xl font-bold text-blue-600">€{room.price}</p>
-                      <p className="text-xs text-zinc-500">pro Nacht</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {categories.map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <Card 
+                  key={cat.title}
+                  className="overflow-hidden bg-zinc-900 border-amber-900/30 hover:border-amber-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/20 group cursor-pointer"
+                  onClick={() => navigate('/book')}
+                >
+                  <div 
+                    className="h-48 bg-cover bg-center relative"
+                    style={{ backgroundImage: `url(${cat.image})` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent"></div>
+                    <div className="absolute top-4 left-4 w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+                      <Icon size={28} weight="fill" className="text-zinc-950" />
                     </div>
                   </div>
-                  <ul className="space-y-2 mb-6">
-                    {room.features.map((feature, fidx) => (
-                      <li key={fidx} className="flex items-center gap-2 text-sm text-zinc-700">
-                        <CheckCircle size={16} weight="fill" className="text-emerald-600" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    onClick={() => navigate('/book')}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Buchen
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                  <div className="p-6">
+                    <h3 className="text-2xl font-bold text-amber-500 font-heading mb-2">{cat.title}</h3>
+                    <p className="text-sm text-amber-400/80 mb-4 min-h-[40px]">{cat.description}</p>
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-xs text-amber-700 uppercase tracking-wider">Ab</p>
+                        <p className="text-3xl font-bold text-amber-500 font-heading">€{cat.price}</p>
+                        <p className="text-xs text-amber-700">pro Nacht</p>
+                      </div>
+                      <CaretRight size={24} className="text-amber-500 group-hover:translate-x-2 transition-transform" />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>
 
       {/* Reviews Section */}
-      <div className="py-20">
+      <div className="py-20 bg-gradient-to-b from-zinc-950 to-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-zinc-950 font-heading mb-4">
+            <p className="text-amber-600 text-sm tracking-[0.3em] uppercase mb-3">Kundenfeedback</p>
+            <h2 className="text-4xl md:text-5xl font-bold text-amber-500 font-heading">
               Was unsere Gäste sagen
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { name: 'Maria S.', rating: 5, text: 'Hervorragendes Hotel! Die Zimmer sind modern und sauber. Das Personal ist sehr freundlich.' },
-              { name: 'Thomas M.', rating: 5, text: 'Perfekte Lage und exzellenter Service. Wir haben uns sehr wohlgefühlt.' },
-              { name: 'Anna K.', rating: 5, text: 'Das Frühstücksbuffet ist fantastisch. Absolute Empfehlung!' }
-            ].map((review, idx) => (
-              <Card key={idx} className="p-6">
-                <div className="flex gap-1 mb-3">
+              { name: 'Maria S.', rating: 5, text: 'Die Villa war absolut traumhaft! Privater Pool, wunderschöner Garten - ein echtes Luxuserlebnis.' },
+              { name: 'Thomas M.', rating: 5, text: 'Perfekt organisiertes Ferienhaus für unsere Familie. Alles war bestens vorbereitet!' },
+              { name: 'Anna K.', rating: 5, text: 'Wunderbares Appartment in zentraler Lage. Modernste Ausstattung und exzellenter Service.' }
+            ].map((review) => (
+              <Card key={review.name} className="p-8 bg-zinc-900 border-amber-900/30 hover:border-amber-500/50 transition-colors">
+                <div className="flex gap-1 mb-4">
                   {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} size={20} weight="fill" className="text-amber-400" />
+                    <Star key={`${review.name}-${i}`} size={20} weight="fill" className="text-amber-500" />
                   ))}
                 </div>
-                <p className="text-zinc-700 mb-4">„{review.text}“</p>
-                <p className="font-semibold text-zinc-900">- {review.name}</p>
+                <p className="text-amber-300/90 mb-4 italic">„{review.text}"</p>
+                <p className="font-semibold text-amber-500">— {review.name}</p>
               </Card>
             ))}
           </div>
@@ -185,54 +172,105 @@ export default function LandingPage() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-blue-600 text-white py-16">
+      <div className="py-20 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600">
         <div className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="text-4xl font-bold font-heading mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-950 mb-4">
             Bereit für Ihren Traumurlaub?
           </h2>
-          <p className="text-xl mb-8">
-            Buchen Sie jetzt online und sichern Sie sich die besten Preise!
+          <p className="text-xl text-zinc-800 mb-8">
+            Buchen Sie jetzt online und genießen Sie exklusiven Luxus!
           </p>
           <Button
             onClick={() => navigate('/book')}
             data-testid="cta-book-bottom"
-            className="bg-white text-blue-600 hover:bg-zinc-100 text-lg px-8 py-6 h-auto"
+            className="bg-zinc-950 text-amber-500 hover:bg-zinc-900 text-lg px-8 py-6 h-auto font-bold shadow-xl"
           >
-            Online buchen
+            Jetzt online buchen
             <CaretRight size={24} weight="bold" className="ml-2" />
           </Button>
         </div>
       </div>
 
+      {/* Contact Section */}
+      <div className="py-16 bg-zinc-950">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-amber-500 font-heading mb-2">Kontaktieren Sie uns</h2>
+            <p className="text-amber-700">Wir sind jederzeit für Sie da</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="p-6 bg-zinc-900 border-amber-900/30 text-center hover:border-amber-500 transition-colors">
+              <div className="w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <EnvelopeSimple size={28} weight="fill" className="text-zinc-950" />
+              </div>
+              <h3 className="text-lg font-bold text-amber-500 mb-2">E-Mail</h3>
+              <a href="mailto:info@luxusvilla-ferien.de" className="text-amber-400 hover:text-amber-300 transition-colors">
+                info@luxusvilla-ferien.de
+              </a>
+            </Card>
+
+            <Card className="p-6 bg-zinc-900 border-amber-900/30 text-center hover:border-amber-500 transition-colors">
+              <div className="w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <WhatsappLogo size={28} weight="fill" className="text-zinc-950" />
+              </div>
+              <h3 className="text-lg font-bold text-amber-500 mb-2">WhatsApp</h3>
+              <a href="https://wa.me/4915227072018" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">
+                +49 1522 7072 018
+              </a>
+            </Card>
+
+            <Card className="p-6 bg-zinc-900 border-amber-900/30 text-center hover:border-amber-500 transition-colors">
+              <div className="w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Phone size={28} weight="fill" className="text-zinc-950" />
+              </div>
+              <h3 className="text-lg font-bold text-amber-500 mb-2">Website</h3>
+              <a href="https://www.luxusvilla-ferien.de" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">
+                www.luxusvilla-ferien.de
+              </a>
+            </Card>
+          </div>
+        </div>
+      </div>
+
       {/* Footer */}
-      <footer className="bg-zinc-950 text-white py-12">
+      <footer className="bg-black text-amber-400 py-12 border-t border-amber-900/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <h3 className="text-xl font-bold font-heading mb-4">Grand Hotel</h3>
-              <p className="text-zinc-400 text-sm">
-                Hauptstraße 123<br />
-                10115 Berlin<br />
-                Deutschland
+              <div className="flex items-center gap-3 mb-4">
+                <img 
+                  src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
+                  alt="Logo"
+                  className="w-12 h-12 object-contain"
+                />
+                <div>
+                  <h3 className="text-lg font-bold font-heading text-amber-500">VILLEN MANAGER</h3>
+                  <p className="text-xs text-amber-600 tracking-[0.2em]">PRO</p>
+                </div>
+              </div>
+              <p className="text-amber-400/70 text-sm">
+                Ihre erste Adresse für exklusive Immobilienverwaltung in Deutschland.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-bold font-heading mb-4">Kontakt</h3>
-              <p className="text-zinc-400 text-sm">
-                Tel: +49 30 12345678<br />
-                E-Mail: info@grandhotel.com
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold font-heading mb-4">Links</h3>
+              <h3 className="text-lg font-bold text-amber-500 mb-4 font-heading">Kontakt</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="/book" className="text-zinc-400 hover:text-white transition-colors">Online Buchen</a></li>
-                <li><a href="/login" className="text-zinc-400 hover:text-white transition-colors">Mitarbeiter-Login</a></li>
+                <li className="text-amber-400/70">Website: www.luxusvilla-ferien.de</li>
+                <li className="text-amber-400/70">E-Mail: info@luxusvilla-ferien.de</li>
+                <li className="text-amber-400/70">WhatsApp: +49 1522 7072 018</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-amber-500 mb-4 font-heading">Schnelle Links</h3>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/book" className="text-amber-400/70 hover:text-amber-500 transition-colors">Online Buchen</a></li>
+                <li><a href="/login" className="text-amber-400/70 hover:text-amber-500 transition-colors">Mitarbeiter-Login</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-zinc-800 mt-8 pt-8 text-center text-zinc-400 text-sm">
-            <p>© 2026 Grand Hotel. Alle Rechte vorbehalten.</p>
+          <div className="border-t border-amber-900/30 pt-8 text-center text-amber-600 text-sm">
+            <p>© 2026 Villen Manager Pro. Alle Rechte vorbehalten.</p>
           </div>
         </div>
       </footer>

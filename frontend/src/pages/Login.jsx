@@ -41,30 +41,45 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-zinc-950">
       <div 
         className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
         style={{
-          backgroundImage: `url('https://static.prod-images.emergentagent.com/jobs/c59dcd1b-f895-4ee2-8eb4-7df9ac4e70ca/images/0f6f370a46a6a6f1f937619c087f3096a72791ff1cb8c4725a6dbb42750d7c08.png')`
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200')`
         }}
       >
-        <div className="absolute inset-0 bg-zinc-950/40"></div>
-        <div className="relative z-10 flex flex-col justify-end p-12">
-          <h2 className="text-4xl font-bold text-white font-heading mb-2">Hotel Management System</h2>
-          <p className="text-zinc-200 text-lg">Professionelle Verwaltung für Ihr Hotel</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-12">
+          <img 
+            src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
+            alt="Villen Manager Pro"
+            className="w-48 h-48 object-contain mb-8"
+          />
+          <h2 className="text-5xl font-bold text-amber-500 font-heading mb-3 text-center">VILLEN MANAGER</h2>
+          <p className="text-amber-600 text-xl tracking-[0.3em] uppercase">PRO</p>
+          <p className="text-amber-400/80 text-lg mt-6 text-center max-w-md">
+            Luxuriöses Immobilien-Management für Villen, Ferienhäuser, Appartments und Zimmer
+          </p>
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 bg-zinc-950">
         <div className="w-full max-w-md">
+          <div className="flex justify-center lg:hidden mb-8">
+            <img 
+              src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
+              alt="Logo"
+              className="w-24 h-24 object-contain"
+            />
+          </div>
+
           <div className="mb-8">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-950 font-heading mb-2">Anmelden</h1>
-            <p className="text-zinc-600">Geben Sie Ihre Anmeldedaten ein</p>
+            <h1 className="text-4xl font-bold tracking-tight text-amber-500 font-heading mb-2">Anmelden</h1>
+            <p className="text-amber-700">Geben Sie Ihre Anmeldedaten ein</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
             <div>
-              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-amber-600 mb-2 block">
                 E-Mail
               </label>
               <Input
@@ -74,12 +89,12 @@ export default function Login() {
                 placeholder="ihre@email.com"
                 required
                 data-testid="email-input"
-                className="h-11"
+                className="h-11 bg-zinc-900 border-amber-900/30 text-amber-400 placeholder:text-amber-800 focus:border-amber-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-amber-600 mb-2 block">
                 Passwort
               </label>
               <Input
@@ -89,7 +104,7 @@ export default function Login() {
                 placeholder="••••••••"
                 required
                 data-testid="password-input"
-                className="h-11"
+                className="h-11 bg-zinc-900 border-amber-900/30 text-amber-400 placeholder:text-amber-800 focus:border-amber-500"
               />
             </div>
 
@@ -97,19 +112,24 @@ export default function Login() {
               type="submit"
               disabled={loading}
               data-testid="login-submit-button"
-              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+              className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold shadow-lg shadow-amber-500/20"
             >
               {loading ? 'Anmelden...' : 'Anmelden'}
             </Button>
           </form>
 
-          <div className="mt-8 p-4 bg-zinc-100 border border-zinc-200 rounded-lg">
-            <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">Test-Konten</p>
-            <div className="space-y-1 text-sm text-zinc-600">
-              <p><strong>Admin:</strong> admin@hotel.com / admin123</p>
-              <p><strong>Rezeption:</strong> rezeption@hotel.com / rezeption123</p>
-              <p><strong>Buchhaltung:</strong> buchhaltung@hotel.com / buchhaltung123</p>
+          <div className="mt-8 p-4 bg-zinc-900 border border-amber-900/30 rounded-lg">
+            <p className="text-xs font-semibold tracking-[0.1em] uppercase text-amber-600 mb-2">Test-Konten</p>
+            <div className="space-y-1 text-sm text-amber-400/80">
+              <p><strong className="text-amber-500">Admin:</strong> admin@villenmanager.com / admin123</p>
+              <p><strong className="text-amber-500">Rezeption:</strong> rezeption@villenmanager.com / rezeption123</p>
+              <p><strong className="text-amber-500">Buchhaltung:</strong> buchhaltung@villenmanager.com / buchhaltung123</p>
             </div>
+          </div>
+
+          <div className="mt-8 text-center text-xs text-amber-700">
+            <p>Kontakt: <a href="mailto:info@luxusvilla-ferien.de" className="hover:text-amber-500">info@luxusvilla-ferien.de</a></p>
+            <p className="mt-1">WhatsApp: <a href="https://wa.me/4915227072018" className="hover:text-amber-500">+49 1522 7072 018</a></p>
           </div>
         </div>
       </div>
