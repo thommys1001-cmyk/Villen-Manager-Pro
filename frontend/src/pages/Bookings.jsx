@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../components/ui/dialog';
-import { Plus, Pencil, Trash } from '@phosphor-icons/react';
+import { Plus, Pencil, Trash, FilePdf } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export default function Bookings() {
@@ -95,6 +95,31 @@ export default function Bookings() {
       fetchBookings();
     } catch (error) {
       toast.error('Fehler beim Löschen');
+    }
+  };
+
+  const handleDownloadInvoice = async (bookingId, roomNumber) => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/bookings/${bookingId}/invoice`,
+        { 
+          withCredentials: true,
+          responseType: 'blob'
+        }
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `rechnung_${roomNumber}_${bookingId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('Rechnung heruntergeladen');
+    } catch (error) {
+      toast.error('Fehler beim Download');
     }
   };
 
@@ -341,6 +366,15 @@ export default function Bookings() {
                       <TableCell>{getStatusBadge(booking.status)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadInvoice(booking._id, booking.room_number)}
+                            data-testid={`download-invoice-${booking._id}`}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <FilePdf size={16} />
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"

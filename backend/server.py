@@ -6,16 +6,26 @@ import bcrypt
 import jwt
 import base64
 import secrets
+import asyncio
+import resend
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 from io import BytesIO
 
 from fastapi import FastAPI, HTTPException, Request, Response, UploadFile, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr, Field
 from pymongo import MongoClient, ASCENDING
 from bson import ObjectId
 from PIL import Image
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.pdfgen import canvas
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
 
@@ -421,6 +431,10 @@ async def create_booking(booking: BookingCreate, user: dict = Depends(get_curren
     
     result = db.bookings.insert_one(booking_data)
     booking_data["_id"] = str(result.inserted_id)
+    
+    # Send confirmation email
+    await send_booking_confirmation_email(booking_data, booking.email)
+    
     return booking_data
 
 @app.get("/api/bookings/{booking_id}")
@@ -633,6 +647,344 @@ async def dashboard_stats(user: dict = Depends(get_current_user)):
         "total_expenses": total_expenses,
         "net_income": total_income - total_expenses
     }
+
+# Email Service
+async def send_booking_confirmation_email(booking_data: dict, guest_email: str):
+    """Send booking confirmation email using Resend"""
+    try:
+        resend.api_key = os.getenv("RESEND_API_KEY")
+        sender_email = os.getenv("SENDER_EMAIL", "onboarding@resend.dev")
+        hotel_name = os.getenv("HOTEL_NAME", "Grand Hotel")
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #3b82f6; color: white; padding: 20px; text-align: center; }}
+                .content {{ padding: 20px; background: #f9fafb; }}
+                .booking-details {{ background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #3b82f6; }}
+                .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }}
+                .detail-row {{ padding: 8px 0; border-bottom: 1px solid #e5e7eb; }}
+                .detail-label {{ font-weight: bold; color: #374151; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>{hotel_name}</h1>
+                    <p>Buchungsbestätigung</p>
+                </div>
+                <div class="content">
+                    <p>Sehr geehrte/r {booking_data.get('guest_name', 'Gast')},</p>
+                    <p>vielen Dank für Ihre Buchung! Wir freuen uns, Sie bei uns begrüßen zu dürfen.</p>
+                    
+                    <div class="booking-details">
+                        <h3>Ihre Buchungsdetails:</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">Zimmernummer:</span> {booking_data.get('room_number', 'N/A')}
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Zimmertyp:</span> {booking_data.get('room_type', 'N/A')}
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Check-In:</span> {booking_data.get('check_in_date', 'N/A')}
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Check-Out:</span> {booking_data.get('check_out_date', 'N/A')}
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Anzahl Gäste:</span> {booking_data.get('guests_count', 1)}
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Gesamtpreis:</span> €{booking_data.get('price', 0):.2f}
+                        </div>
+                    </div>
+                    
+                    <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+                    <p>Wir freuen uns auf Ihren Besuch!</p>
+                </div>
+                <div class="footer">
+                    <p>{hotel_name}<br>
+                    {os.getenv('HOTEL_ADDRESS', 'Hauptstraße 123, 10115 Berlin')}<br>
+                    Tel: {os.getenv('HOTEL_PHONE', '+49 30 12345678')}<br>
+                    E-Mail: {os.getenv('HOTEL_EMAIL', 'info@hotel.com')}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        params = {
+            "from": sender_email,
+            "to": [guest_email],
+            "subject": f"Buchungsbestätigung - {hotel_name}",
+            "html": html_content
+        }
+        
+        # Non-blocking email send
+        await asyncio.to_thread(resend.Emails.send, params)
+        return True
+    except Exception as e:
+        print(f"Email sending failed: {str(e)}")
+        return False
+
+# PDF Invoice Generation
+def generate_invoice_pdf(booking: dict) -> BytesIO:
+    """Generate PDF invoice for a booking"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Hotel Info
+    hotel_name = os.getenv("HOTEL_NAME", "Grand Hotel")
+    hotel_address = os.getenv("HOTEL_ADDRESS", "Hauptstraße 123, 10115 Berlin")
+    hotel_phone = os.getenv("HOTEL_PHONE", "+49 30 12345678")
+    hotel_email = os.getenv("HOTEL_EMAIL", "info@hotel.com")
+    
+    # Title
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=colors.HexColor('#3b82f6'),
+        spaceAfter=12
+    )
+    elements.append(Paragraph(hotel_name, title_style))
+    elements.append(Paragraph(f"{hotel_address}<br/>{hotel_phone}<br/>{hotel_email}", styles['Normal']))
+    elements.append(Spacer(1, 20))
+    
+    # Invoice Title
+    elements.append(Paragraph("RECHNUNG", styles['Heading1']))
+    elements.append(Spacer(1, 12))
+    
+    # Guest Info
+    elements.append(Paragraph(f"<b>Gast:</b> {booking.get('guest_name', 'N/A')}", styles['Normal']))
+    elements.append(Paragraph(f"<b>E-Mail:</b> {booking.get('email', 'N/A')}", styles['Normal']))
+    elements.append(Paragraph(f"<b>Telefon:</b> {booking.get('phone', 'N/A')}", styles['Normal']))
+    elements.append(Spacer(1, 20))
+    
+    # Booking Details Table
+    data = [
+        ['Beschreibung', 'Details', 'Betrag'],
+        ['Zimmernummer', booking.get('room_number', 'N/A'), ''],
+        ['Zimmertyp', booking.get('room_type', 'N/A'), ''],
+        ['Check-In', booking.get('check_in_date', 'N/A'), ''],
+        ['Check-Out', booking.get('check_out_date', 'N/A'), ''],
+        ['Anzahl Gäste', str(booking.get('guests_count', 1)), ''],
+        ['', '', ''],
+        ['Gesamtbetrag', '', f"€{booking.get('price', 0):.2f}"]
+    ]
+    
+    table = Table(data, colWidths=[60*mm, 70*mm, 40*mm])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e5e7eb')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -2), 1, colors.grey),
+        ('BOX', (0, -1), (-1, -1), 2, colors.black),
+    ]))
+    
+    elements.append(table)
+    elements.append(Spacer(1, 30))
+    
+    # Footer
+    elements.append(Paragraph(f"Rechnungsdatum: {datetime.now().strftime('%d.%m.%Y')}", styles['Normal']))
+    elements.append(Paragraph("Vielen Dank für Ihren Aufenthalt!", styles['Normal']))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+# Availability API
+@app.get("/api/availability")
+async def get_availability(start_date: str, end_date: str, user: dict = Depends(get_current_user)):
+    """Get room availability for a date range"""
+    try:
+        # Get all bookings in the date range
+        bookings = list(db.bookings.find({
+            "$or": [
+                {
+                    "check_in_date": {"$lte": end_date},
+                    "check_out_date": {"$gte": start_date}
+                }
+            ],
+            "status": {"$in": ["pending", "checked_in"]}
+        }))
+        
+        # Get occupied rooms
+        occupied_rooms = {}
+        for booking in bookings:
+            room = booking["room_number"]
+            if room not in occupied_rooms:
+                occupied_rooms[room] = []
+            occupied_rooms[room].append({
+                "guest_name": booking["guest_name"],
+                "check_in": booking["check_in_date"],
+                "check_out": booking["check_out_date"],
+                "status": booking["status"]
+            })
+        
+        # Define available rooms (you can make this dynamic from a rooms collection)
+        all_rooms = [f"{floor}{num:02d}" for floor in range(1, 4) for num in range(1, 11)]
+        
+        availability = []
+        for room in all_rooms:
+            availability.append({
+                "room_number": room,
+                "is_available": room not in occupied_rooms,
+                "bookings": occupied_rooms.get(room, [])
+            })
+        
+        return availability
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Invoice Download
+@app.get("/api/bookings/{booking_id}/invoice")
+async def download_invoice(booking_id: str, user: dict = Depends(get_current_user)):
+    """Download PDF invoice for a booking"""
+    try:
+        booking = db.bookings.find_one({"_id": ObjectId(booking_id)})
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        # Generate PDF
+        pdf_buffer = generate_invoice_pdf(booking)
+        
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=rechnung_{booking['room_number']}_{booking_id}.pdf"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Public Booking API (No Auth Required)
+class PublicBookingCreate(BaseModel):
+    guest_name: str
+    email: EmailStr
+    phone: str
+    room_type: str
+    check_in_date: str
+    check_out_date: str
+    guests_count: int = 1
+    special_requests: Optional[str] = None
+
+@app.post("/api/public/bookings")
+async def create_public_booking(booking: PublicBookingCreate):
+    """Public endpoint for online bookings (no authentication required)"""
+    try:
+        # Check availability for the room type
+        existing_bookings = db.bookings.count_documents({
+            "room_type": booking.room_type,
+            "$or": [
+                {
+                    "check_in_date": {"$lte": booking.check_out_date},
+                    "check_out_date": {"$gte": booking.check_in_date}
+                }
+            ],
+            "status": {"$in": ["pending", "checked_in"]}
+        })
+        
+        # Get all rooms of this type (simplified: assume 5 rooms per type)
+        max_rooms_per_type = 5
+        if existing_bookings >= max_rooms_per_type:
+            raise HTTPException(status_code=400, detail="Keine Zimmer verfügbar für diese Daten")
+        
+        # Assign a room number (simplified logic)
+        room_number = f"{booking.room_type[0]}{existing_bookings + 1:02d}"
+        
+        # Calculate price based on room type and nights
+        from datetime import datetime
+        check_in = datetime.strptime(booking.check_in_date, "%Y-%m-%d")
+        check_out = datetime.strptime(booking.check_out_date, "%Y-%m-%d")
+        nights = (check_out - check_in).days
+        
+        price_per_night = {
+            "Standard": 80,
+            "Deluxe": 120,
+            "Suite": 200,
+            "Penthouse": 350
+        }
+        total_price = price_per_night.get(booking.room_type, 100) * nights
+        
+        booking_data = {
+            "guest_name": booking.guest_name,
+            "email": booking.email,
+            "phone": booking.phone,
+            "room_number": room_number,
+            "room_type": booking.room_type,
+            "check_in_date": booking.check_in_date,
+            "check_out_date": booking.check_out_date,
+            "guests_count": booking.guests_count,
+            "price": total_price,
+            "status": "pending",
+            "id_verified": False,
+            "id_data": None,
+            "special_requests": booking.special_requests,
+            "created_at": datetime.now(timezone.utc),
+            "booking_source": "online"
+        }
+        
+        result = db.bookings.insert_one(booking_data)
+        booking_data["_id"] = str(result.inserted_id)
+        
+        # Send confirmation email
+        await send_booking_confirmation_email(booking_data, booking.email)
+        
+        return {
+            "message": "Buchung erfolgreich erstellt!",
+            "booking_id": booking_data["_id"],
+            "room_number": room_number,
+            "total_price": total_price,
+            "confirmation_sent": True
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/public/room-types")
+async def get_room_types():
+    """Get available room types with pricing"""
+    return [
+        {
+            "type": "Standard",
+            "price_per_night": 80,
+            "description": "Komfortables Zimmer mit allen Annehmlichkeiten",
+            "features": ["Kostenfreies WLAN", "Klimaanlage", "Flachbild-TV"]
+        },
+        {
+            "type": "Deluxe",
+            "price_per_night": 120,
+            "description": "Geräumiges Zimmer mit gehobener Ausstattung",
+            "features": ["Kostenfreies WLAN", "Klimaanlage", "Minibar", "Balkon"]
+        },
+        {
+            "type": "Suite",
+            "price_per_night": 200,
+            "description": "Luxuriöse Suite mit separatem Wohnbereich",
+            "features": ["Kostenfreies WLAN", "Klimaanlage", "Minibar", "Balkon", "Whirlpool"]
+        },
+        {
+            "type": "Penthouse",
+            "price_per_night": 350,
+            "description": "Exklusive Penthouse-Suite mit Panoramablick",
+            "features": ["Kostenfreies WLAN", "Klimaanlage", "Minibar", "Große Terrasse", "Whirlpool", "Concierge-Service"]
+        }
+    ]
 
 @app.get("/")
 async def root():

@@ -6,8 +6,10 @@ import { Toaster } from './components/ui/sonner';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
+import Availability from './pages/Availability';
 import CheckIn from './pages/CheckIn';
 import Accounting from './pages/Accounting';
+import PublicBooking from './pages/PublicBooking';
 import './App.css';
 
 function App() {
@@ -16,6 +18,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/book" element={<PublicBooking />} />
           <Route
             path="/dashboard"
             element={
@@ -29,6 +32,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Bookings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/availability"
+            element={
+              <ProtectedRoute>
+                <Availability />
               </ProtectedRoute>
             }
           />
@@ -48,7 +59,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/book" replace />} />
         </Routes>
       </Router>
       <Toaster position="top-right" />

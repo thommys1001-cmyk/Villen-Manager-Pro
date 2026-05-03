@@ -8,7 +8,8 @@ import {
   CurrencyDollar, 
   SignOut,
   House,
-  IdentificationCard
+  IdentificationCard,
+  CalendarCheck
 } from '@phosphor-icons/react';
 
 export const Sidebar = () => {
@@ -23,6 +24,7 @@ export const Sidebar = () => {
   const navItems = [
     { to: '/dashboard', icon: House, label: 'Dashboard', roles: ['admin', 'rezeption', 'buchhaltung'] },
     { to: '/bookings', icon: Calendar, label: 'Buchungen', roles: ['admin', 'rezeption'] },
+    { to: '/availability', icon: CalendarCheck, label: 'Verfügbarkeit', roles: ['admin', 'rezeption'] },
     { to: '/check-in', icon: DoorOpen, label: 'Check-In', roles: ['admin', 'rezeption'] },
     { to: '/accounting', icon: CurrencyDollar, label: 'Buchhaltung', roles: ['admin', 'buchhaltung'] },
   ];
