@@ -224,9 +224,13 @@ export default function CheckIn() {
                 </p>
                 <div className="space-y-2 text-sm">
                   <p><span className="font-semibold">Zimmer:</span> {selectedBooking?.room_number}</p>
-                  <p><span className="font-semibold">Typ:</span> {selectedBooking?.room_type}</p>
+                  <p><span className="font-semibold">Kategorie:</span> {selectedBooking?.room_type}</p>
                   <p><span className="font-semibold">Gäste:</span> {selectedBooking?.guests_count}</p>
                   <p><span className="font-semibold">Check-Out:</span> {selectedBooking?.check_out_date}</p>
+                  <p><span className="font-semibold">Preis:</span> €{selectedBooking?.price?.toFixed(2)}</p>
+                  {selectedBooking?.deposit > 0 && (
+                    <p><span className="font-semibold">Kaution:</span> €{selectedBooking?.deposit?.toFixed(2)}</p>
+                  )}
                 </div>
               </div>
 

@@ -65,6 +65,7 @@ class BookingCreate(BaseModel):
     check_in_date: str
     check_out_date: str
     price: float
+    deposit: float = 0.0
     guests_count: int = 1
 
 class BookingUpdate(BaseModel):
@@ -76,6 +77,7 @@ class BookingUpdate(BaseModel):
     check_in_date: Optional[str] = None
     check_out_date: Optional[str] = None
     price: Optional[float] = None
+    deposit: Optional[float] = None
     guests_count: Optional[int] = None
     status: Optional[str] = None
 
@@ -687,7 +689,7 @@ async def send_booking_confirmation_email(booking_data: dict, guest_email: str):
                             <span class="detail-label">Zimmernummer:</span> {booking_data.get('room_number', 'N/A')}
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Zimmertyp:</span> {booking_data.get('room_type', 'N/A')}
+                            <span class="detail-label">Kategorie:</span> {booking_data.get('room_type', 'N/A')}
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Check-In:</span> {booking_data.get('check_in_date', 'N/A')}
@@ -699,7 +701,11 @@ async def send_booking_confirmation_email(booking_data: dict, guest_email: str):
                             <span class="detail-label">Anzahl Gäste:</span> {booking_data.get('guests_count', 1)}
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Gesamtpreis:</span> €{booking_data.get('price', 0):.2f}
+                            <span class="detail-label">Übernachtungspreis:</span> €{booking_data.get('price', 0):.2f}
+                        </div>
+                        {f'<div class="detail-row"><span class="detail-label">Kaution:</span> €{booking_data.get("deposit", 0):.2f}</div>' if booking_data.get('deposit', 0) > 0 else ''}
+                        <div class="detail-row" style="background: #f0f9ff; font-weight: bold;">
+                            <span class="detail-label">Gesamtbetrag:</span> €{(booking_data.get('price', 0) + (booking_data.get('deposit', 0) or 0)):.2f}
                         </div>
                     </div>
                     
@@ -771,13 +777,23 @@ def generate_invoice_pdf(booking: dict) -> BytesIO:
     data = [
         ['Beschreibung', 'Details', 'Betrag'],
         ['Zimmernummer', booking.get('room_number', 'N/A'), ''],
-        ['Zimmertyp', booking.get('room_type', 'N/A'), ''],
+        ['Kategorie', booking.get('room_type', 'N/A'), ''],
         ['Check-In', booking.get('check_in_date', 'N/A'), ''],
         ['Check-Out', booking.get('check_out_date', 'N/A'), ''],
         ['Anzahl Gäste', str(booking.get('guests_count', 1)), ''],
         ['', '', ''],
-        ['Gesamtbetrag', '', f"€{booking.get('price', 0):.2f}"]
+        ['Übernachtungspreis', '', f"€{booking.get('price', 0):.2f}"],
     ]
+    
+    # Add deposit if exists
+    deposit = booking.get('deposit', 0) or 0
+    if deposit > 0:
+        data.append(['Kaution (Sicherheitsleistung)', '', f"€{deposit:.2f}"])
+        data.append(['', '', ''])
+        data.append(['GESAMTBETRAG', '', f"€{(booking.get('price', 0) + deposit):.2f}"])
+    else:
+        data.append(['', '', ''])
+        data.append(['GESAMTBETRAG', '', f"€{booking.get('price', 0):.2f}"])
     
     table = Table(data, colWidths=[60*mm, 70*mm, 40*mm])
     table.setStyle(TableStyle([
@@ -880,6 +896,8 @@ class PublicBookingCreate(BaseModel):
     check_in_date: str
     check_out_date: str
     guests_count: int = 1
+    price_per_night: Optional[float] = None
+    deposit: Optional[float] = 0.0
     special_requests: Optional[str] = None
 
 @app.post("/api/public/bookings")
@@ -906,19 +924,23 @@ async def create_public_booking(booking: PublicBookingCreate):
         # Assign a room number (simplified logic)
         room_number = f"{booking.room_type[0]}{existing_bookings + 1:02d}"
         
-        # Calculate price based on room type and nights
+        # Calculate price based on input or defaults
         from datetime import datetime
         check_in = datetime.strptime(booking.check_in_date, "%Y-%m-%d")
         check_out = datetime.strptime(booking.check_out_date, "%Y-%m-%d")
         nights = (check_out - check_in).days
         
-        price_per_night = {
-            "Villa": 500,
-            "Ferienhaus": 250,
-            "Appartment": 120,
-            "Zimmer": 80
-        }
-        total_price = price_per_night.get(booking.room_type, 100) * nights
+        # Use custom price if provided, otherwise use defaults
+        if booking.price_per_night is not None and booking.price_per_night > 0:
+            total_price = booking.price_per_night * nights
+        else:
+            price_per_night = {
+                "Villa": 500,
+                "Ferienhaus": 250,
+                "Appartment": 120,
+                "Zimmer": 80
+            }
+            total_price = price_per_night.get(booking.room_type, 100) * nights
         
         booking_data = {
             "guest_name": booking.guest_name,
@@ -930,6 +952,7 @@ async def create_public_booking(booking: PublicBookingCreate):
             "check_out_date": booking.check_out_date,
             "guests_count": booking.guests_count,
             "price": total_price,
+            "deposit": booking.deposit or 0.0,
             "status": "pending",
             "id_verified": False,
             "id_data": None,

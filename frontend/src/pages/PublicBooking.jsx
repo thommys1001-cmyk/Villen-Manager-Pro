@@ -20,6 +20,8 @@ export default function PublicBooking() {
     check_in_date: new Date().toISOString().split('T')[0],
     check_out_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     guests_count: 1,
+    price_per_night: '',
+    deposit: '',
     special_requests: ''
   });
 
@@ -40,13 +42,19 @@ export default function PublicBooking() {
 
   const calculateTotal = () => {
     if (!formData.room_type || !formData.check_in_date || !formData.check_out_date) return 0;
-    const roomType = roomTypes.find(rt => rt.type === formData.room_type);
-    if (!roomType) return 0;
     
     const checkIn = new Date(formData.check_in_date);
     const checkOut = new Date(formData.check_out_date);
     const nights = Math.max(0, Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)));
     
+    // Use custom price if set, otherwise default
+    const pricePerNight = parseFloat(formData.price_per_night) || 0;
+    if (pricePerNight > 0) {
+      return pricePerNight * nights;
+    }
+    
+    const roomType = roomTypes.find(rt => rt.type === formData.room_type);
+    if (!roomType) return 0;
     return roomType.price_per_night * nights;
   };
 
@@ -55,9 +63,15 @@ export default function PublicBooking() {
     setLoading(true);
 
     try {
+      const submitData = {
+        ...formData,
+        price_per_night: formData.price_per_night ? parseFloat(formData.price_per_night) : null,
+        deposit: formData.deposit ? parseFloat(formData.deposit) : 0
+      };
+      
       const { data } = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/api/public/bookings`,
-        formData
+        submitData
       );
       setBookingDetails(data);
       setBookingSuccess(true);
@@ -104,19 +118,26 @@ export default function PublicBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <div className="bg-white border-b border-zinc-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-950 font-heading">Grand Hotel</h1>
-          <p className="text-zinc-600 mt-1">Online Buchung</p>
+    <div className="min-h-screen bg-zinc-950">
+      <div className="bg-zinc-950 border-b border-gold-500/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center gap-4">
+          <img 
+            src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
+            alt="Villen Manager Pro"
+            className="w-16 h-16 object-contain"
+          />
+          <div>
+            <h1 className="text-3xl font-bold tracking-wider text-gold-400 font-heading">VILLEN MANAGER PRO</h1>
+            <p className="text-gold-600 mt-1">Online Buchung</p>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <Card className="p-8">
-              <h2 className="text-2xl font-bold text-zinc-950 font-heading mb-6">Ihre Buchung</h2>
+            <Card className="p-8 bg-zinc-900 border-gold-500/30">
+              <h2 className="text-2xl font-bold text-gold-400 font-heading mb-6">Ihre Buchung</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -168,11 +189,10 @@ export default function PublicBooking() {
                         <SelectValue placeholder="Wählen Sie eine Kategorie" />
                       </SelectTrigger>
                       <SelectContent>
-                        {roomTypes.map(rt => (
-                          <SelectItem key={rt.type} value={rt.type}>
-                            {rt.type === 'Villa' ? 'Villen' : rt.type === 'Ferienhaus' ? 'Ferienhäuser' : rt.type} - €{rt.price_per_night}/Nacht
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="Villa">Villen</SelectItem>
+                        <SelectItem value="Ferienhaus">Ferienhäuser</SelectItem>
+                        <SelectItem value="Appartment">Appartment</SelectItem>
+                        <SelectItem value="Zimmer">Zimmer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -215,6 +235,36 @@ export default function PublicBooking() {
                       required
                     />
                   </div>
+
+                  <div>
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      Preis pro Nacht (€)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price_per_night}
+                      onChange={(e) => setFormData({ ...formData, price_per_night: e.target.value })}
+                      data-testid="price-per-night-input"
+                      placeholder="z.B. 250.00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      Kaution (€)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.deposit}
+                      onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
+                      data-testid="deposit-input"
+                      placeholder="z.B. 500.00"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -229,12 +279,12 @@ export default function PublicBooking() {
                   />
                 </div>
 
-                <div className="pt-6 border-t">
+                <div className="pt-6 border-t border-gold-500/30">
                   <Button
                     type="submit"
                     disabled={loading}
                     data-testid="submit-booking-button"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-lg"
+                    className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 h-12 text-lg font-bold shadow-xl shadow-gold-500/30"
                   >
                     {loading ? 'Buchung wird verarbeitet...' : 'Jetzt buchen'}
                   </Button>
@@ -244,32 +294,38 @@ export default function PublicBooking() {
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6 bg-blue-50 border-blue-200">
-              <h3 className="text-lg font-semibold text-zinc-900 mb-4">Ihre Zusammenfassung</h3>
+            <Card className="p-6 bg-zinc-900 border-gold-500/30">
+              <h3 className="text-lg font-semibold text-gold-400 mb-4">Ihre Zusammenfassung</h3>
               {formData.room_type && (
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 text-sm text-gold-400">
                   <div className="flex justify-between">
                     <span>Kategorie:</span>
-                    <span className="font-medium">{formData.room_type}</span>
+                    <span className="font-medium text-gold-500">{formData.room_type}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Nächte:</span>
-                    <span className="font-medium">
+                    <span className="font-medium text-gold-500">
                       {Math.max(0, Math.ceil((new Date(formData.check_out_date) - new Date(formData.check_in_date)) / (1000 * 60 * 60 * 24)))}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Gäste:</span>
-                    <span className="font-medium">{formData.guests_count}</span>
+                    <span className="font-medium text-gold-500">{formData.guests_count}</span>
                   </div>
-                  <div className="pt-3 border-t border-blue-300 flex justify-between text-lg font-bold text-blue-900">
-                    <span>Gesamt:</span>
-                    <span>€{calculateTotal().toFixed(2)}</span>
+                  {formData.deposit && parseFloat(formData.deposit) > 0 && (
+                    <div className="flex justify-between">
+                      <span>Kaution:</span>
+                      <span className="font-medium text-gold-500">€{parseFloat(formData.deposit).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-gold-500/30 flex justify-between text-lg font-bold">
+                    <span className="text-gold-400">Gesamt:</span>
+                    <span className="text-gold-500">€{calculateTotal().toFixed(2)}</span>
                   </div>
                 </div>
               )}
               {!formData.room_type && (
-                <p className="text-zinc-600 text-sm">Wählen Sie eine Kategorie, um den Preis zu sehen</p>
+                <p className="text-gold-600 text-sm">Wählen Sie eine Kategorie, um den Preis zu sehen</p>
               )}
             </Card>
 

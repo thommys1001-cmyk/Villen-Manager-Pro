@@ -39,10 +39,11 @@ export default function Bookings() {
     email: '',
     phone: '',
     room_number: '',
-    room_type: 'Standard',
+    room_type: 'Villa',
     check_in_date: '',
     check_out_date: '',
     price: '',
+    deposit: '',
     guests_count: 1,
   });
 
@@ -136,10 +137,11 @@ export default function Bookings() {
       email: '',
       phone: '',
       room_number: '',
-      room_type: 'Standard',
+      room_type: 'Villa',
       check_in_date: '',
       check_out_date: '',
       price: '',
+      deposit: '',
       guests_count: 1,
     });
     setEditingBooking(null);
@@ -156,6 +158,7 @@ export default function Bookings() {
       check_in_date: booking.check_in_date,
       check_out_date: booking.check_out_date,
       price: booking.price,
+      deposit: booking.deposit || 0,
       guests_count: booking.guests_count,
     });
     setShowDialog(true);
@@ -309,7 +312,7 @@ export default function Bookings() {
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
-                        Preis (€)
+                        Preis pro Nacht (€)
                       </label>
                       <Input
                         type="number"
@@ -318,6 +321,21 @@ export default function Bookings() {
                         onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
                         required
                         data-testid="price-input"
+                        placeholder="z.B. 250.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                        Kaution (€)
+                      </label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.deposit}
+                        onChange={(e) => setFormData({ ...formData, deposit: parseFloat(e.target.value) || 0 })}
+                        data-testid="deposit-input"
+                        placeholder="z.B. 500.00"
                       />
                     </div>
                   </div>
@@ -353,6 +371,7 @@ export default function Bookings() {
                   <TableHead className="font-semibold text-zinc-950">Check-In</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Check-Out</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Preis</TableHead>
+                  <TableHead className="font-semibold text-zinc-950">Kaution</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Status</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Aktionen</TableHead>
                 </TableRow>
@@ -360,13 +379,13 @@ export default function Bookings() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="text-center py-8">
                       <div className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
                     </TableCell>
                   </TableRow>
                 ) : bookings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-zinc-600">
+                    <TableCell colSpan={9} className="text-center py-8 text-zinc-600">
                       Keine Buchungen gefunden
                     </TableCell>
                   </TableRow>
@@ -379,6 +398,7 @@ export default function Bookings() {
                       <TableCell>{booking.check_in_date}</TableCell>
                       <TableCell>{booking.check_out_date}</TableCell>
                       <TableCell>€{booking.price.toFixed(2)}</TableCell>
+                      <TableCell>€{(booking.deposit || 0).toFixed(2)}</TableCell>
                       <TableCell>{getStatusBadge(booking.status)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
