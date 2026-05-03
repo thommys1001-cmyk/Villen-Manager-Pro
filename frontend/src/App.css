@@ -1,30 +1,30 @@
 :root {
-  --background: 0 0% 7%;
-  --foreground: 45 100% 70%;
+  --background: 0 0% 4%;
+  --foreground: 43 77% 71%;
   --card: 0 0% 10%;
-  --card-foreground: 45 100% 70%;
+  --card-foreground: 43 77% 71%;
   --popover: 0 0% 10%;
-  --popover-foreground: 45 100% 70%;
-  --primary: 45 100% 60%;
-  --primary-foreground: 0 0% 7%;
+  --popover-foreground: 43 77% 71%;
+  --primary: 43 74% 52%;
+  --primary-foreground: 0 0% 4%;
   --secondary: 0 0% 15%;
-  --secondary-foreground: 45 100% 70%;
+  --secondary-foreground: 43 77% 71%;
   --muted: 0 0% 15%;
-  --muted-foreground: 45 50% 60%;
-  --accent: 45 100% 60%;
-  --accent-foreground: 0 0% 7%;
+  --muted-foreground: 43 50% 60%;
+  --accent: 43 74% 52%;
+  --accent-foreground: 0 0% 4%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 20%;
-  --input: 0 0% 20%;
-  --ring: 45 100% 60%;
+  --border: 43 30% 20%;
+  --input: 43 30% 20%;
+  --ring: 43 74% 52%;
   --radius: 0.5rem;
 }
 
 .App {
   min-height: 100vh;
-  background: #121212;
-  color: #D4AF37;
+  background: #0a0a0a;
+  color: #F1D279;
 }
 
 .container {
@@ -32,12 +32,14 @@
   margin: 0 auto;
 }
 
-/* Gold gradient effect */
-.gold-gradient {
-  background: linear-gradient(135deg, #D4AF37 0%, #F4E5A0 50%, #D4AF37 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Gold text default */
+.gold-text {
+  color: #F1D279;
+}
+
+/* Gold accent for buttons, borders, icons */
+.gold-accent {
+  color: #D4AF37;
 }
 
 /* Luxury hover effects */
@@ -48,4 +50,22 @@
 .luxury-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 40px rgba(212, 175, 55, 0.3);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4AF37;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #F1D279;
 }

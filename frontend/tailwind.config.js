@@ -48,10 +48,10 @@ module.exports = {
           50: '#FDF8E7',
           100: '#FBF0C5',
           200: '#F7E296',
-          300: '#F4D03F',
-          400: '#E8C547',
-          500: '#D4AF37',  // Classic metallic gold
-          600: '#B8860B',
+          300: '#F1D279',  // Gold-Text (exact hex)
+          400: '#F1D279',  // Gold-Text (exact hex)
+          500: '#D4AF37',  // Gold-Akzent (exact hex)
+          600: '#B8941F',
           700: '#9A7209',
           800: '#7A5A08',
           900: '#5C4306',
