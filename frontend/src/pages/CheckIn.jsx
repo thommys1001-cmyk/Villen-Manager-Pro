@@ -134,7 +134,7 @@ export default function CheckIn() {
     if (verified) {
       return <Badge className="text-emerald-700 bg-emerald-50 border-emerald-200">Verifiziert</Badge>;
     }
-    return <Badge className="text-amber-700 bg-amber-50 border-amber-200">Noch nicht verifiziert</Badge>;
+    return <Badge className="text-gold-700 bg-gold-50 border-gold-200">Noch nicht verifiziert</Badge>;
   };
 
   return (

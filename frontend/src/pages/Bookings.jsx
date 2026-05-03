@@ -156,7 +156,7 @@ export default function Bookings() {
 
   const getStatusBadge = (status) => {
     const variants = {
-      pending: 'text-amber-700 bg-amber-50 border-amber-200',
+      pending: 'text-gold-700 bg-gold-50 border-gold-200',
       checked_in: 'text-emerald-700 bg-emerald-50 border-emerald-200',
       checked_out: 'text-zinc-700 bg-zinc-50 border-zinc-200',
     };

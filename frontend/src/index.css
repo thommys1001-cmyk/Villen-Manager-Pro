@@ -9,12 +9,13 @@
     @apply border-zinc-800;
   }
   body {
-    @apply bg-zinc-950 text-amber-400 font-sans;
+    @apply bg-zinc-950 font-sans;
     font-family: 'Montserrat', sans-serif;
+    color: #D4AF37;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
-    @apply text-amber-500;
+    color: #D4AF37;
   }
 }
 
@@ -25,10 +26,39 @@
   .text-gold {
     color: #D4AF37;
   }
+  .text-gold-light {
+    color: #E8C547;
+  }
+  .text-gold-dark {
+    color: #B8860B;
+  }
+  .bg-gold {
+    background-color: #D4AF37;
+  }
   .bg-luxury-black {
     background: #0a0a0a;
   }
   .border-gold {
     border-color: #D4AF37;
+  }
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #F4D03F 0%, #D4AF37 50%, #B8860B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .gold-gradient-bg {
+    background: linear-gradient(135deg, #F4D03F 0%, #D4AF37 50%, #B8860B 100%);
+  }
+  .metallic-gold {
+    background: linear-gradient(135deg, 
+      #BF953F 0%, 
+      #FCF6BA 25%, 
+      #B38728 50%, 
+      #FBF5B7 75%, 
+      #AA771C 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

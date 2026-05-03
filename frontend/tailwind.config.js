@@ -43,17 +43,31 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // True metallic gold palette matching the logo
         gold: {
-          50: '#FEF9E7',
-          100: '#FCF3CF',
-          200: '#F9E79F',
-          300: '#F7DC6F',
-          400: '#F4D03F',
-          500: '#D4AF37',
-          600: '#B8942C',
-          700: '#9C7921',
-          800: '#7F5E16',
-          900: '#63430B',
+          50: '#FDF8E7',
+          100: '#FBF0C5',
+          200: '#F7E296',
+          300: '#F4D03F',
+          400: '#E8C547',
+          500: '#D4AF37',  // Classic metallic gold
+          600: '#B8860B',
+          700: '#9A7209',
+          800: '#7A5A08',
+          900: '#5C4306',
+        },
+        // Dark backgrounds
+        noir: {
+          50: '#1a1a1a',
+          100: '#161616',
+          200: '#121212',
+          300: '#0e0e0e',
+          400: '#0a0a0a',  // Main luxury black
+          500: '#080808',
+          600: '#060606',
+          700: '#040404',
+          800: '#020202',
+          900: '#000000',
         },
       },
       borderRadius: {

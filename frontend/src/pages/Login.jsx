@@ -54,9 +54,9 @@ export default function Login() {
             alt="Villen Manager Pro"
             className="w-48 h-48 object-contain mb-8"
           />
-          <h2 className="text-5xl font-bold text-amber-500 font-heading mb-3 text-center">VILLEN MANAGER</h2>
-          <p className="text-amber-600 text-xl tracking-[0.3em] uppercase">PRO</p>
-          <p className="text-amber-400/80 text-lg mt-6 text-center max-w-md">
+          <h2 className="text-5xl font-bold text-gold-500 font-heading mb-3 text-center">VILLEN MANAGER</h2>
+          <p className="text-gold-600 text-xl tracking-[0.3em] uppercase">PRO</p>
+          <p className="text-gold-400/80 text-lg mt-6 text-center max-w-md">
             Luxuriöses Immobilien-Management für Villen, Ferienhäuser, Appartments und Zimmer
           </p>
         </div>
@@ -73,13 +73,13 @@ export default function Login() {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-4xl font-bold tracking-tight text-amber-500 font-heading mb-2">Anmelden</h1>
-            <p className="text-amber-700">Geben Sie Ihre Anmeldedaten ein</p>
+            <h1 className="text-4xl font-bold tracking-tight text-gold-500 font-heading mb-2">Anmelden</h1>
+            <p className="text-gold-700">Geben Sie Ihre Anmeldedaten ein</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
             <div>
-              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-amber-600 mb-2 block">
+              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-600 mb-2 block">
                 E-Mail
               </label>
               <Input
@@ -89,12 +89,12 @@ export default function Login() {
                 placeholder="ihre@email.com"
                 required
                 data-testid="email-input"
-                className="h-11 bg-zinc-900 border-amber-900/30 text-amber-400 placeholder:text-amber-800 focus:border-amber-500"
+                className="h-11 bg-zinc-900 border-gold-900/30 text-gold-400 placeholder:text-gold-800 focus:border-gold-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-amber-600 mb-2 block">
+              <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-600 mb-2 block">
                 Passwort
               </label>
               <Input
@@ -104,7 +104,7 @@ export default function Login() {
                 placeholder="••••••••"
                 required
                 data-testid="password-input"
-                className="h-11 bg-zinc-900 border-amber-900/30 text-amber-400 placeholder:text-amber-800 focus:border-amber-500"
+                className="h-11 bg-zinc-900 border-gold-900/30 text-gold-400 placeholder:text-gold-800 focus:border-gold-500"
               />
             </div>
 
@@ -112,24 +112,24 @@ export default function Login() {
               type="submit"
               disabled={loading}
               data-testid="login-submit-button"
-              className="w-full h-11 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold shadow-lg shadow-amber-500/20"
+              className="w-full h-11 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 font-bold shadow-lg shadow-gold-500/20"
             >
               {loading ? 'Anmelden...' : 'Anmelden'}
             </Button>
           </form>
 
-          <div className="mt-8 p-4 bg-zinc-900 border border-amber-900/30 rounded-lg">
-            <p className="text-xs font-semibold tracking-[0.1em] uppercase text-amber-600 mb-2">Test-Konten</p>
-            <div className="space-y-1 text-sm text-amber-400/80">
-              <p><strong className="text-amber-500">Admin:</strong> admin@villenmanager.com / admin123</p>
-              <p><strong className="text-amber-500">Rezeption:</strong> rezeption@villenmanager.com / rezeption123</p>
-              <p><strong className="text-amber-500">Buchhaltung:</strong> buchhaltung@villenmanager.com / buchhaltung123</p>
+          <div className="mt-8 p-4 bg-zinc-900 border border-gold-900/30 rounded-lg">
+            <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-600 mb-2">Test-Konten</p>
+            <div className="space-y-1 text-sm text-gold-400/80">
+              <p><strong className="text-gold-500">Admin:</strong> admin@villenmanager.com / admin123</p>
+              <p><strong className="text-gold-500">Rezeption:</strong> rezeption@villenmanager.com / rezeption123</p>
+              <p><strong className="text-gold-500">Buchhaltung:</strong> buchhaltung@villenmanager.com / buchhaltung123</p>
             </div>
           </div>
 
-          <div className="mt-8 text-center text-xs text-amber-700">
-            <p>Kontakt: <a href="mailto:info@luxusvilla-ferien.de" className="hover:text-amber-500">info@luxusvilla-ferien.de</a></p>
-            <p className="mt-1">WhatsApp: <a href="https://wa.me/4915227072018" className="hover:text-amber-500">+49 1522 7072 018</a></p>
+          <div className="mt-8 text-center text-xs text-gold-700">
+            <p>Kontakt: <a href="mailto:info@luxusvilla-ferien.de" className="hover:text-gold-500">info@luxusvilla-ferien.de</a></p>
+            <p className="mt-1">WhatsApp: <a href="https://wa.me/4915227072018" className="hover:text-gold-500">+49 1522 7072 018</a></p>
           </div>
         </div>
       </div>

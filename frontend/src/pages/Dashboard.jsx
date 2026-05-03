@@ -54,7 +54,7 @@ export default function Dashboard() {
       label: 'Gesamtbuchungen',
       value: stats?.total_bookings || 0,
       icon: Calendar,
-      color: 'text-amber-500',
+      color: 'text-gold-500',
     },
     {
       label: 'Eingecheckt',
@@ -66,7 +66,7 @@ export default function Dashboard() {
       label: 'Ausstehend',
       value: stats?.pending || 0,
       icon: CheckCircle,
-      color: 'text-amber-500',
+      color: 'text-gold-500',
     },
     {
       label: 'Gesamteinnahmen',
@@ -84,7 +84,7 @@ export default function Dashboard() {
       label: 'Nettogewinn',
       value: `€${(stats?.net_income || 0).toFixed(2)}`,
       icon: CurrencyDollar,
-      color: 'text-amber-500',
+      color: 'text-gold-500',
     },
   ];
 
@@ -137,7 +137,7 @@ export default function Dashboard() {
         <div className="flex-1 ml-64">
           <div className="p-8">
             <div className="text-center py-12">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent"></div>
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gold-500 border-r-transparent"></div>
             </div>
           </div>
         </div>
@@ -149,10 +149,10 @@ export default function Dashboard() {
     <div className="flex bg-zinc-950 min-h-screen" data-testid="dashboard-page">
       <Sidebar />
       <div className="flex-1 ml-64">
-        <div className="bg-zinc-950/90 backdrop-blur-xl border-b border-amber-900/30 sticky top-0 z-40">
+        <div className="bg-zinc-950/90 backdrop-blur-xl border-b border-gold-900/30 sticky top-0 z-40">
           <div className="p-6">
-            <h1 className="text-4xl font-bold tracking-tight text-amber-500 font-heading">Dashboard</h1>
-            <p className="text-amber-700 mt-1">Übersicht Ihrer Immobilienverwaltung</p>
+            <h1 className="text-4xl font-bold tracking-tight text-gold-500 font-heading">Dashboard</h1>
+            <p className="text-gold-700 mt-1">Übersicht Ihrer Immobilienverwaltung</p>
           </div>
         </div>
 
@@ -164,19 +164,19 @@ export default function Dashboard() {
               return (
                 <Card
                   key={stat.label}
-                  className="p-6 border border-amber-900/30 bg-zinc-900 hover:border-amber-500/50 transition-all duration-200 hover:shadow-lg hover:shadow-amber-500/10"
+                  className="p-6 border border-gold-900/30 bg-zinc-900 hover:border-gold-500/50 transition-all duration-200 hover:shadow-lg hover:shadow-gold-500/10"
                   data-testid={`stat-card-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-xs font-semibold tracking-[0.1em] uppercase text-amber-700 mb-2">
+                      <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-700 mb-2">
                         {stat.label}
                       </p>
-                      <p className="text-3xl font-bold text-amber-400 font-heading">
+                      <p className="text-3xl font-bold text-gold-400 font-heading">
                         {stat.value}
                       </p>
                     </div>
-                    <div className={`bg-zinc-950 ${stat.color} p-3 rounded-lg border border-amber-900/30`}>
+                    <div className={`bg-zinc-950 ${stat.color} p-3 rounded-lg border border-gold-900/30`}>
                       <Icon size={24} weight="fill" />
                     </div>
                   </div>
@@ -188,8 +188,8 @@ export default function Dashboard() {
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Bookings by Property Type */}
-            <Card className="p-6 border border-amber-900/30 bg-zinc-900">
-              <h2 className="text-xl font-bold font-heading text-amber-500 mb-4 flex items-center gap-2">
+            <Card className="p-6 border border-gold-900/30 bg-zinc-900">
+              <h2 className="text-xl font-bold font-heading text-gold-500 mb-4 flex items-center gap-2">
                 <Buildings size={24} weight="fill" />
                 Buchungen nach Kategorie
               </h2>
@@ -216,8 +216,8 @@ export default function Dashboard() {
             </Card>
 
             {/* Status Distribution */}
-            <Card className="p-6 border border-amber-900/30 bg-zinc-900">
-              <h2 className="text-xl font-bold font-heading text-amber-500 mb-4 flex items-center gap-2">
+            <Card className="p-6 border border-gold-900/30 bg-zinc-900">
+              <h2 className="text-xl font-bold font-heading text-gold-500 mb-4 flex items-center gap-2">
                 <CheckCircle size={24} weight="fill" />
                 Buchungsstatus
               </h2>
@@ -252,8 +252,8 @@ export default function Dashboard() {
           </div>
 
           {/* Monthly Revenue */}
-          <Card className="p-6 border border-amber-900/30 bg-zinc-900">
-            <h2 className="text-xl font-bold font-heading text-amber-500 mb-4 flex items-center gap-2">
+          <Card className="p-6 border border-gold-900/30 bg-zinc-900">
+            <h2 className="text-xl font-bold font-heading text-gold-500 mb-4 flex items-center gap-2">
               <TrendUp size={24} weight="fill" />
               Monatliche Einnahmen (Letzte 6 Monate)
             </h2>
@@ -283,24 +283,24 @@ export default function Dashboard() {
           </Card>
 
           {/* Contact Info Card */}
-          <Card className="p-6 border border-amber-900/30 bg-gradient-to-br from-zinc-900 to-zinc-950">
-            <h2 className="text-xl font-bold font-heading text-amber-500 mb-4">Kontaktdaten</h2>
+          <Card className="p-6 border border-gold-900/30 bg-gradient-to-br from-zinc-900 to-zinc-950">
+            <h2 className="text-xl font-bold font-heading text-gold-500 mb-4">Kontaktdaten</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-amber-700 text-xs uppercase tracking-wider mb-1">Website</p>
-                <a href="https://www.luxusvilla-ferien.de" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">
+                <p className="text-gold-700 text-xs uppercase tracking-wider mb-1">Website</p>
+                <a href="https://www.luxusvilla-ferien.de" target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:text-gold-300 transition-colors">
                   www.luxusvilla-ferien.de
                 </a>
               </div>
               <div>
-                <p className="text-amber-700 text-xs uppercase tracking-wider mb-1">E-Mail</p>
-                <a href="mailto:info@luxusvilla-ferien.de" className="text-amber-400 hover:text-amber-300 transition-colors">
+                <p className="text-gold-700 text-xs uppercase tracking-wider mb-1">E-Mail</p>
+                <a href="mailto:info@luxusvilla-ferien.de" className="text-gold-400 hover:text-gold-300 transition-colors">
                   info@luxusvilla-ferien.de
                 </a>
               </div>
               <div>
-                <p className="text-amber-700 text-xs uppercase tracking-wider mb-1">WhatsApp</p>
-                <a href="https://wa.me/4915227072018" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:text-amber-300 transition-colors">
+                <p className="text-gold-700 text-xs uppercase tracking-wider mb-1">WhatsApp</p>
+                <a href="https://wa.me/4915227072018" target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:text-gold-300 transition-colors">
                   +49 1522 7072 018
                 </a>
               </div>

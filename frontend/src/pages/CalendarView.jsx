@@ -38,7 +38,7 @@ function SortableBookingItem({ booking }) {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-amber-50 border-amber-200 text-amber-700',
+      pending: 'bg-gold-50 border-gold-200 text-gold-700',
       checked_in: 'bg-emerald-50 border-emerald-200 text-emerald-700',
       checked_out: 'bg-zinc-50 border-zinc-200 text-zinc-700',
     };
