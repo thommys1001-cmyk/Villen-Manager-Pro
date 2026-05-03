@@ -36,20 +36,16 @@ export const Sidebar = () => {
   );
 
   return (
-    <div className="bg-zinc-950 border-r border-gold-900/30 text-gold-400 h-screen w-64 fixed left-0 top-0 flex flex-col" data-testid="sidebar">
-      <div className="p-6 border-b border-gold-900/30">
-        <div className="flex flex-col items-center gap-3 mb-2">
+    <div className="bg-zinc-950 border-r border-gold-500/30 text-gold-400 h-screen w-64 fixed left-0 top-0 flex flex-col" data-testid="sidebar">
+      <div className="p-4 border-b border-gold-500/30">
+        <div className="flex flex-col items-center">
           <img 
             src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
             alt="Villen Manager Pro Logo" 
-            className="w-20 h-20 object-contain"
+            className="w-40 h-40 object-contain"
           />
-          <div className="text-center">
-            <h1 className="text-lg font-bold font-heading tracking-wider text-gold-500">VILLEN MANAGER</h1>
-            <p className="text-xs text-gold-600 uppercase tracking-[0.3em] font-semibold mt-1">PRO</p>
-          </div>
+          <p className="text-xs text-gold-500 uppercase tracking-wider font-medium text-center mt-3">{user?.role}</p>
         </div>
-        <p className="text-xs text-gold-700 uppercase tracking-wider font-medium text-center mt-3">{user?.role}</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-1">

@@ -158,19 +158,19 @@ export default function PublicBooking() {
                   </div>
                   <div>
                     <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
-                      Zimmertyp *
+                      Kategorie *
                     </label>
                     <Select
                       value={formData.room_type}
                       onValueChange={(value) => setFormData({ ...formData, room_type: value })}
                     >
                       <SelectTrigger data-testid="room-type-select">
-                        <SelectValue placeholder="Wählen Sie einen Typ" />
+                        <SelectValue placeholder="Wählen Sie eine Kategorie" />
                       </SelectTrigger>
                       <SelectContent>
                         {roomTypes.map(rt => (
                           <SelectItem key={rt.type} value={rt.type}>
-                            {rt.type} - €{rt.price_per_night}/Nacht
+                            {rt.type === 'Villa' ? 'Villen' : rt.type === 'Ferienhaus' ? 'Ferienhäuser' : rt.type} - €{rt.price_per_night}/Nacht
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -249,7 +249,7 @@ export default function PublicBooking() {
               {formData.room_type && (
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span>Zimmertyp:</span>
+                    <span>Kategorie:</span>
                     <span className="font-medium">{formData.room_type}</span>
                   </div>
                   <div className="flex justify-between">
@@ -269,7 +269,7 @@ export default function PublicBooking() {
                 </div>
               )}
               {!formData.room_type && (
-                <p className="text-zinc-600 text-sm">Wählen Sie einen Zimmertyp, um den Preis zu sehen</p>
+                <p className="text-zinc-600 text-sm">Wählen Sie eine Kategorie, um den Preis zu sehen</p>
               )}
             </Card>
 

@@ -19,6 +19,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { Plus, Pencil, Trash, FilePdf } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
@@ -247,13 +254,22 @@ export default function Bookings() {
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
-                        Zimmertyp
+                        Kategorie
                       </label>
-                      <Input
+                      <Select
                         value={formData.room_type}
-                        onChange={(e) => setFormData({ ...formData, room_type: e.target.value })}
-                        required
-                      />
+                        onValueChange={(value) => setFormData({ ...formData, room_type: value })}
+                      >
+                        <SelectTrigger data-testid="category-select">
+                          <SelectValue placeholder="Kategorie wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Villa">Villen</SelectItem>
+                          <SelectItem value="Ferienhaus">Ferienhäuser</SelectItem>
+                          <SelectItem value="Appartment">Appartment</SelectItem>
+                          <SelectItem value="Zimmer">Zimmer</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
@@ -333,7 +349,7 @@ export default function Bookings() {
                 <TableRow className="bg-zinc-50 border-b border-zinc-200">
                   <TableHead className="font-semibold text-zinc-950">Gastname</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Zimmer</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Typ</TableHead>
+                  <TableHead className="font-semibold text-zinc-950">Kategorie</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Check-In</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Check-Out</TableHead>
                   <TableHead className="font-semibold text-zinc-950">Preis</TableHead>

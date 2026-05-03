@@ -60,7 +60,7 @@ export default function Dashboard() {
       label: 'Eingecheckt',
       value: stats?.checked_in || 0,
       icon: DoorOpen,
-      color: 'text-emerald-500',
+      color: 'text-gold-400',
     },
     {
       label: 'Ausstehend',
@@ -72,13 +72,13 @@ export default function Dashboard() {
       label: 'Gesamteinnahmen',
       value: `€${(stats?.total_income || 0).toFixed(2)}`,
       icon: TrendUp,
-      color: 'text-emerald-500',
+      color: 'text-gold-400',
     },
     {
       label: 'Gesamtausgaben',
       value: `€${(stats?.total_expenses || 0).toFixed(2)}`,
       icon: CurrencyDollar,
-      color: 'text-red-500',
+      color: 'text-gold-600',
     },
     {
       label: 'Nettogewinn',
@@ -109,11 +109,11 @@ export default function Dashboard() {
     );
   }
 
-  // Status breakdown
+  // Status breakdown - using exact gold hex values
   const statusData = [
-    { name: 'Ausstehend', value: bookings.filter(b => b.status === 'pending').length, color: '#F59E0B' },
-    { name: 'Eingecheckt', value: bookings.filter(b => b.status === 'checked_in').length, color: '#10B981' },
-    { name: 'Ausgecheckt', value: bookings.filter(b => b.status === 'checked_out').length, color: '#71717A' }
+    { name: 'Ausstehend', value: bookings.filter(b => b.status === 'pending').length, color: '#D4AF37' },
+    { name: 'Eingecheckt', value: bookings.filter(b => b.status === 'checked_in').length, color: '#F1D279' },
+    { name: 'Ausgecheckt', value: bookings.filter(b => b.status === 'checked_out').length, color: '#B8941F' }
   ];
 
   // Monthly revenue (last 6 months)
@@ -208,7 +208,7 @@ export default function Dashboard() {
                   />
                   <Bar dataKey="buchungen" fill="#D4AF37" radius={[8, 8, 0, 0]}>
                     {propertyTypeData.map((entry, index) => (
-                      <Cell key={`cell-${entry.name}`} fill={`hsl(${45 + index * 10}, ${70 - index * 5}%, ${60 - index * 3}%)`} />
+                      <Cell key={`cell-${entry.name}`} fill={index % 2 === 0 ? '#D4AF37' : '#F1D279'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -274,8 +274,8 @@ export default function Dashboard() {
                 <Bar dataKey="einnahmen" fill="url(#goldGradient)" radius={[8, 8, 0, 0]} />
                 <defs>
                   <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#F4D03F" />
-                    <stop offset="100%" stopColor="#B8942C" />
+                    <stop offset="0%" stopColor="#F1D279" />
+                    <stop offset="100%" stopColor="#D4AF37" />
                   </linearGradient>
                 </defs>
               </BarChart>
