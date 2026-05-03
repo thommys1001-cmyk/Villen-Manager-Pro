@@ -6,8 +6,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['IBM Plex Sans', 'sans-serif'],
-        heading: ['Cabinet Grotesk', 'sans-serif'],
+        sans: ['Montserrat', 'sans-serif'],
+        heading: ['Playfair Display', 'serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -42,6 +42,18 @@ module.exports = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        gold: {
+          50: '#FEF9E7',
+          100: '#FCF3CF',
+          200: '#F9E79F',
+          300: '#F7DC6F',
+          400: '#F4D03F',
+          500: '#D4AF37',
+          600: '#B8942C',
+          700: '#9C7921',
+          800: '#7F5E16',
+          900: '#63430B',
         },
       },
       borderRadius: {

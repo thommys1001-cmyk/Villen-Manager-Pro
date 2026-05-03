@@ -913,10 +913,10 @@ async def create_public_booking(booking: PublicBookingCreate):
         nights = (check_out - check_in).days
         
         price_per_night = {
-            "Standard": 80,
-            "Deluxe": 120,
-            "Suite": 200,
-            "Penthouse": 350
+            "Villa": 500,
+            "Ferienhaus": 250,
+            "Appartment": 120,
+            "Zimmer": 80
         }
         total_price = price_per_night.get(booking.room_type, 100) * nights
         
@@ -965,31 +965,31 @@ async def create_public_booking(booking: PublicBookingCreate):
 
 @app.get("/api/public/room-types")
 async def get_room_types():
-    """Get available room types with pricing"""
+    """Get available property types with pricing"""
     return [
         {
-            "type": "Standard",
+            "type": "Villa",
+            "price_per_night": 500,
+            "description": "Luxuriöse Villa mit privatem Pool und Garten",
+            "features": ["Privater Pool", "Großer Garten", "5+ Schlafzimmer", "Vollausstattung", "Parkplätze"]
+        },
+        {
+            "type": "Ferienhaus",
+            "price_per_night": 250,
+            "description": "Gemütliches Ferienhaus für die ganze Familie",
+            "features": ["3-4 Schlafzimmer", "Garten", "Voll ausgestattete Küche", "Terrasse"]
+        },
+        {
+            "type": "Appartment",
+            "price_per_night": 120,
+            "description": "Modernes Appartment in bester Lage",
+            "features": ["1-2 Schlafzimmer", "Balkon", "Moderne Ausstattung", "Zentrale Lage"]
+        },
+        {
+            "type": "Zimmer",
             "price_per_night": 80,
             "description": "Komfortables Zimmer mit allen Annehmlichkeiten",
-            "features": ["Kostenfreies WLAN", "Klimaanlage", "Flachbild-TV"]
-        },
-        {
-            "type": "Deluxe",
-            "price_per_night": 120,
-            "description": "Geräumiges Zimmer mit gehobener Ausstattung",
-            "features": ["Kostenfreies WLAN", "Klimaanlage", "Minibar", "Balkon"]
-        },
-        {
-            "type": "Suite",
-            "price_per_night": 200,
-            "description": "Luxuriöse Suite mit separatem Wohnbereich",
-            "features": ["Kostenfreies WLAN", "Klimaanlage", "Minibar", "Balkon", "Whirlpool"]
-        },
-        {
-            "type": "Penthouse",
-            "price_per_night": 350,
-            "description": "Exklusive Penthouse-Suite mit Panoramablick",
-            "features": ["Kostenfreies WLAN", "Klimaanlage", "Minibar", "Große Terrasse", "Whirlpool", "Concierge-Service"]
+            "features": ["Privates Bad", "WLAN", "Klimaanlage", "TV"]
         }
     ]
 

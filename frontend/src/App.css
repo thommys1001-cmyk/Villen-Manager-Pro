@@ -1,31 +1,51 @@
 :root {
-  --background: 240 5% 96%;
-  --foreground: 240 10% 4%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 4%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 4%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 240 6% 10%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 240 5% 96%;
-  --muted-foreground: 240 4% 46%;
-  --accent: 240 5% 96%;
-  --accent-foreground: 240 6% 10%;
+  --background: 0 0% 7%;
+  --foreground: 45 100% 70%;
+  --card: 0 0% 10%;
+  --card-foreground: 45 100% 70%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 45 100% 70%;
+  --primary: 45 100% 60%;
+  --primary-foreground: 0 0% 7%;
+  --secondary: 0 0% 15%;
+  --secondary-foreground: 45 100% 70%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 45 50% 60%;
+  --accent: 45 100% 60%;
+  --accent-foreground: 0 0% 7%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 240 6% 90%;
-  --input: 240 6% 90%;
-  --ring: 221 83% 53%;
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 45 100% 60%;
   --radius: 0.5rem;
 }
 
 .App {
   min-height: 100vh;
+  background: #121212;
+  color: #D4AF37;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
+}
+
+/* Gold gradient effect */
+.gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #F4E5A0 50%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Luxury hover effects */
+.luxury-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.luxury-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(212, 175, 55, 0.3);
 }
