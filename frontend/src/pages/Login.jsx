@@ -45,7 +45,7 @@ export default function Login() {
       <div 
         className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
         style={{
-          backgroundImage: `linear-gradient(rgba(10,10,10,0.75), rgba(10,10,10,0.85)), url('https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/015cbc62177d4f40897e0ad1ec594ae4_Bild%20(1).jpg')`
+          backgroundImage: `linear-gradient(rgba(10,10,10,0.75), rgba(10,10,10,0.85)), url('https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/8dba1e69afd1420499fa76f1c7e5ee55_pical-resort-infinity-pool-by-sea-airview.jpg')`
         }}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center p-12">
