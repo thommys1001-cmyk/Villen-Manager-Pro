@@ -53,9 +53,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-zinc-950 text-gold-400">
       {/* Hero Section */}
       <div 
-        className="relative h-[700px] bg-cover bg-center"
+        className="relative h-[700px] bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: "linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1920')"
+          backgroundImage: "linear-gradient(rgba(10,10,10,0.75), rgba(10,10,10,0.9)), url('https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/015cbc62177d4f40897e0ad1ec594ae4_Bild%20(1).jpg')"
         }}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
