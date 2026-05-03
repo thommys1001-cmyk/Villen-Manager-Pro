@@ -944,6 +944,9 @@ async def create_public_booking(booking: PublicBookingCreate):
         # Send confirmation email
         await send_booking_confirmation_email(booking_data, booking.email)
         
+        # Send WhatsApp notification to hotel staff
+        await notify_new_booking(booking_data)
+        
         return {
             "message": "Buchung erfolgreich erstellt!",
             "booking_id": booking_data["_id"],
@@ -951,6 +954,10 @@ async def create_public_booking(booking: PublicBookingCreate):
             "total_price": total_price,
             "confirmation_sent": True
         }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:

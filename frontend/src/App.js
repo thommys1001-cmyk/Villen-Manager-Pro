@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
 import Availability from './pages/Availability';
+import CalendarView from './pages/CalendarView';
 import CheckIn from './pages/CheckIn';
 import Accounting from './pages/Accounting';
 import PublicBooking from './pages/PublicBooking';
@@ -17,6 +19,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/book" element={<PublicBooking />} />
           <Route
@@ -44,6 +47,14 @@ function App() {
             }
           />
           <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <CalendarView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/check-in"
             element={
               <ProtectedRoute>
@@ -59,7 +70,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/book" replace />} />
         </Routes>
       </Router>
       <Toaster position="top-right" />
