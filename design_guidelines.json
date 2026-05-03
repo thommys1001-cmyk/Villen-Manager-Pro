@@ -1,0 +1,88 @@
+{
+  "theme": "LIGHT",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "emotional_tone": "Professional, Authoritative, Clear, Efficient",
+  "colors": {
+    "background": "bg-zinc-50",
+    "surface": "bg-white",
+    "surface_hover": "hover:bg-zinc-100",
+    "text_primary": "text-zinc-950",
+    "text_secondary": "text-zinc-500",
+    "border": "border-zinc-200",
+    "accent_primary": "bg-blue-600",
+    "accent_primary_hover": "hover:bg-blue-700",
+    "accent_primary_text": "text-white",
+    "accent_secondary": "bg-zinc-900",
+    "accent_secondary_text": "text-white",
+    "status_success": "text-emerald-700 bg-emerald-50 border-emerald-200",
+    "status_warning": "text-amber-700 bg-amber-50 border-amber-200",
+    "status_danger": "text-red-700 bg-red-50 border-red-200",
+    "status_info": "text-blue-700 bg-blue-50 border-blue-200"
+  },
+  "typography": {
+    "font_heading": "font-sans", 
+    "font_heading_family_css": "'Cabinet Grotesk', sans-serif",
+    "font_body": "font-sans",
+    "font_body_family_css": "'IBM Plex Sans', sans-serif",
+    "h1": "text-4xl font-bold tracking-tight text-zinc-950",
+    "h2": "text-2xl font-semibold tracking-tight text-zinc-900",
+    "h3": "text-lg font-semibold tracking-tight text-zinc-900",
+    "body": "text-sm text-zinc-600 leading-relaxed",
+    "label": "text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500"
+  },
+  "spacing": {
+    "container_padding": "p-6 sm:p-8",
+    "grid_gap": "gap-4 sm:gap-6",
+    "section_gap": "gap-8 sm:gap-12"
+  },
+  "surfaces": {
+    "card": "bg-white border border-zinc-200 rounded-lg overflow-hidden",
+    "header": "bg-white/80 backdrop-blur-xl border-b border-zinc-200 z-50 sticky top-0",
+    "sidebar": "bg-zinc-950 text-white border-r border-zinc-800"
+  },
+  "layouts": {
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "dashboard_main_chart": "col-span-1 md:col-span-2 lg:col-span-3",
+    "dashboard_sidebar_widget": "col-span-1"
+  },
+  "interactions_and_motion": {
+    "hover_state": "transition-colors duration-200 ease-in-out",
+    "button_active": "active:scale-[0.98]",
+    "focus_ring": "focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+  },
+  "components": {
+    "buttons": "rounded-md font-medium px-4 py-2 inline-flex items-center justify-center transition-all",
+    "data_tables": "Use Shadcn Table. Ensure header row has distinct background (bg-zinc-50) and bottom border.",
+    "badges": "rounded-full px-2.5 py-0.5 text-xs font-semibold border",
+    "inputs": "Use Shadcn Input. Border zinc-200, focus ring blue-600."
+  },
+  "media": {
+    "login_background": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/c59dcd1b-f895-4ee2-8eb4-7df9ac4e70ca/images/0f6f370a46a6a6f1f937619c087f3096a72791ff1cb8c4725a6dbb42750d7c08.png",
+      "description": "Minimalist high-end hotel reception abstract photography for auth screens"
+    },
+    "id_scan_illustration": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/c59dcd1b-f895-4ee2-8eb4-7df9ac4e70ca/images/08d193c1ec0b8d42bb621bf8f5c6cff025457d5108b108f55717282e703ba14a.png",
+      "description": "Abstract illustration representing biometric ID scanning"
+    },
+    "room_placeholders": [
+      "https://images.unsplash.com/photo-1775866914767-7e4646f2481a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBob3RlbCUyMHJvb20lMjBpbnRlcmlvcnxlbnwwfHx8fDE3Nzc3NzYxMTZ8MA&ixlib=rb-4.1.0&q=85",
+      "https://images.unsplash.com/photo-1776763018821-8feeaeeee0a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMHJvb20lMjBpbnRlcmlvcnxlbnwwfHx8fDE3Nzc3NzYxMTZ8MA&ixlib=rb-4.1.0&q=85",
+      "https://images.pexels.com/photos/18201945/pexels-photo-18201945.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "https://images.unsplash.com/photo-1777169794972-12095816073b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHw0fHxsdXh1cnklMjBob3RlbCUyMHJvb20lMjBpbnRlcmlvcnxlbnwwfHx8fDE3Nzc3NzYxMTZ8MA&ixlib=rb-4.1.0&q=85"
+    ]
+  },
+  "specific_instructions_for_main_agent": [
+    "NOTE: The stack uses .js files, NOT .tsx. Configure shadcn and components for .jsx / .js syntax.",
+    "Install required dependencies: yarn add @phosphor-icons/react recharts sonner date-fns react-webcam",
+    "Install shadcn components: button, card, input, table, badge, dialog, tabs, calendar, popover, select, dropdown-menu.",
+    "Typography Setup: Add 'Cabinet Grotesk' (headings) and 'IBM Plex Sans' (body) imports to index.css and update tailwind.config.js.",
+    "Layout Approach: Apply the 'Control Room' grid (Mode B) for dashboard screens. Data views should feel dense but orderly. Max border radius is 8px.",
+    "ID Scanning Feature: Use the 'react-webcam' library. Implement a UI overlay over the video feed to guide the passport/ID alignment. MOCK the actual scanning backend if necessary, but provide the realistic scanning UI.",
+    "Accounting/Expenses Module: Render structured Shadcn data tables. Categorize spending visually (Gardening, Pool Service, Hedge Trimming, Repairs) using distinct icons or badge colors.",
+    "Navigation: Ensure a permanent, sticky navigation header or sidebar.",
+    "Testing: Add data-testid attributes to all interactive elements, e.g., data-testid='camera-scan-button', data-testid='check-in-submit', etc.",
+    "Data Inputs: NEVER use raw HTML <select> or <input type='date'>. Always use Shadcn Select and Shadcn Calendar components.",
+    "UI Exports: Ensure 'Export PDF' and 'Export Excel' buttons are present in the Accounting and Bookings sections. They can trigger Sonner toast messages indicating mock download."
+  ]
+}
