@@ -1,0 +1,29 @@
+{
+  "short_name": "Villen Manager Pro",
+  "name": "Villen Manager Pro - Luxus Immobilienverwaltung",
+  "description": "Exklusive Immobilienverwaltung für Villen, Ferienhäuser, Appartments & Zimmer",
+  "icons": [
+    {
+      "src": "https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#D4AF37",
+  "background_color": "#0a0a0a",
+  "scope": "/",
+  "categories": ["business", "travel", "lifestyle"],
+  "lang": "de",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}

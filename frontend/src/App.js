@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -73,6 +74,7 @@ function App() {
         </Routes>
       </Router>
       <Toaster position="top-right" />
+      <PWAInstallPrompt />
     </AuthProvider>
   );
 }
