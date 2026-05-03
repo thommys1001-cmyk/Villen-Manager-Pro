@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Sidebar } from '../components/Sidebar';
 import { Button } from '../components/ui/button';
@@ -39,11 +39,7 @@ export default function Bookings() {
     guests_count: 1,
   });
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       const { data } = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/bookings`,
@@ -55,7 +51,11 @@ export default function Bookings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

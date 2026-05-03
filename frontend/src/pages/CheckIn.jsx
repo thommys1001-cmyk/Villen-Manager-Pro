@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import Webcam from 'react-webcam';
 import { Sidebar } from '../components/Sidebar';
@@ -31,24 +31,23 @@ export default function CheckIn() {
   const [idData, setIdData] = useState(null);
   const webcamRef = useRef(null);
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       const { data } = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/bookings`,
         { withCredentials: true }
       );
-      // Only show pending bookings
       setBookings(data.filter(b => b.status === 'pending'));
     } catch (error) {
       toast.error('Fehler beim Laden der Buchungen');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const capturePhoto = () => {
     const imageSrc = webcamRef.current.getScreenshot();
@@ -63,7 +62,6 @@ export default function CheckIn() {
 
     setScanning(true);
     try {
-      // Convert base64 to file
       const base64Data = capturedImage.split(',')[1];
       const blob = await fetch(capturedImage).then(r => r.blob());
       const file = new File([blob], 'id-scan.jpg', { type: 'image/jpeg' });
@@ -130,6 +128,13 @@ export default function CheckIn() {
     setShowScanner(true);
     setCapturedImage(null);
     setIdData(null);
+  };
+
+  const getStatusBadge = (verified) => {
+    if (verified) {
+      return <Badge className="text-emerald-700 bg-emerald-50 border-emerald-200">Verifiziert</Badge>;
+    }
+    return <Badge className="text-amber-700 bg-amber-50 border-amber-200">Noch nicht verifiziert</Badge>;
   };
 
   return (
@@ -240,9 +245,7 @@ export default function CheckIn() {
                     </p>
                   </div>
                 ) : (
-                  <Badge className="text-amber-700 bg-amber-50 border-amber-200">
-                    Noch nicht verifiziert
-                  </Badge>
+                  getStatusBadge(false)
                 )}
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Sidebar } from '../components/Sidebar';
 import { Card } from '../components/ui/card';
@@ -16,11 +16,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const { data } = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/stats/dashboard`,
@@ -32,7 +28,11 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const statCards = [
     {
@@ -107,11 +107,11 @@ export default function Dashboard() {
 
         <div className="p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {statCards.map((stat, index) => {
+            {statCards.map((stat) => {
               const Icon = stat.icon;
               return (
                 <Card
-                  key={index}
+                  key={stat.label}
                   className="p-6 border border-zinc-200 bg-white hover:shadow-lg transition-shadow duration-200"
                   data-testid={`stat-card-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}
                 >

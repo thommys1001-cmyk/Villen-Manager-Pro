@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -21,14 +21,19 @@ export const Sidebar = () => {
     navigate('/login');
   };
 
-  const navItems = [
+  const navItems = useMemo(() => [
     { to: '/dashboard', icon: House, label: 'Dashboard', roles: ['admin', 'rezeption', 'buchhaltung'] },
     { to: '/bookings', icon: Calendar, label: 'Buchungen', roles: ['admin', 'rezeption'] },
     { to: '/availability', icon: CalendarCheck, label: 'Verfügbarkeit', roles: ['admin', 'rezeption'] },
     { to: '/calendar', icon: CalendarCheck, label: 'Kalender (D&D)', roles: ['admin', 'rezeption'] },
     { to: '/check-in', icon: DoorOpen, label: 'Check-In', roles: ['admin', 'rezeption'] },
     { to: '/accounting', icon: CurrencyDollar, label: 'Buchhaltung', roles: ['admin', 'buchhaltung'] },
-  ];
+  ], []);
+
+  const filteredNavItems = useMemo(
+    () => navItems.filter(item => item.roles.includes(user?.role)),
+    [navItems, user?.role]
+  );
 
   return (
     <div className="bg-zinc-950 text-white h-screen w-64 fixed left-0 top-0 flex flex-col border-r border-zinc-800" data-testid="sidebar">
@@ -38,9 +43,7 @@ export const Sidebar = () => {
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {navItems
-          .filter(item => item.roles.includes(user?.role))
-          .map(({ to, icon: Icon, label }) => (
+        {filteredNavItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
