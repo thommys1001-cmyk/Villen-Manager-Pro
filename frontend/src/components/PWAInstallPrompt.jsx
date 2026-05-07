@@ -119,7 +119,7 @@ export const PWAInstallPrompt = () => {
         <Button
           onClick={handleInstall}
           data-testid="pwa-install-button"
-          className="flex-1 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 font-bold"
+          className="flex-1 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-gold-400 font-bold"
         >
           <Download size={18} weight="bold" className="mr-2" />
           Installieren
@@ -127,7 +127,7 @@ export const PWAInstallPrompt = () => {
         <Button
           onClick={handleDismiss}
           variant="outline"
-          className="border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-zinc-950"
+          className="border-gold-500 text-gold-400 hover:bg-gold-500 hover:text-gold-400"
         >
           Später
         </Button>

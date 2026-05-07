@@ -40,7 +40,7 @@ function SortableBookingItem({ booking }) {
     const colors = {
       pending: 'bg-gold-50 border-gold-200 text-gold-700',
       checked_in: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-      checked_out: 'bg-zinc-50 border-zinc-200 text-zinc-700',
+      checked_out: 'bg-zinc-950 border-gold-500/30 text-gold-500',
     };
     return colors[status] || colors.pending;
   };
@@ -49,28 +49,28 @@ function SortableBookingItem({ booking }) {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white border border-zinc-200 rounded-lg p-4 mb-2 hover:shadow-md transition-shadow"
+      className="bg-zinc-900 border border-gold-500/30 rounded-lg p-4 mb-2 hover:shadow-md transition-shadow"
     >
       <div className="flex items-start gap-3">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing mt-1 text-zinc-400 hover:text-zinc-600"
+          className="cursor-grab active:cursor-grabbing mt-1 text-zinc-400 hover:text-gold-600"
         >
           <DotsSixVertical size={20} weight="bold" />
         </button>
         <div className="flex-1">
           <div className="flex justify-between items-start mb-2">
             <div>
-              <h3 className="font-semibold text-zinc-900">{booking.guest_name}</h3>
-              <p className="text-sm text-zinc-600">Zimmer {booking.room_number}</p>
+              <h3 className="font-semibold text-gold-400">{booking.guest_name}</h3>
+              <p className="text-sm text-gold-600">Zimmer {booking.room_number}</p>
             </div>
             <Badge className={getStatusColor(booking.status)}>
               {booking.status === 'pending' ? 'Ausstehend' : 
                booking.status === 'checked_in' ? 'Eingecheckt' : 'Ausgecheckt'}
             </Badge>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-sm text-zinc-600">
+          <div className="grid grid-cols-2 gap-2 text-sm text-gold-600">
             <div>
               <span className="font-medium">Check-In:</span> {booking.check_in_date}
             </div>
@@ -153,13 +153,13 @@ export default function CalendarView() {
   return (
     <div className="flex" data-testid="calendar-view-page">
       <Sidebar />
-      <div className="flex-1 ml-64">
-        <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200 sticky top-0 z-40">
+      <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-gold-500/30 sticky top-0 z-40">
           <div className="p-6">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-950 font-heading">
+            <h1 className="text-4xl font-bold tracking-tight text-gold-400 font-heading">
               Kalenderansicht
             </h1>
-            <p className="text-zinc-600 mt-1">
+            <p className="text-gold-600 mt-1">
               Drag & Drop zum Neuordnen der Buchungen
             </p>
           </div>
@@ -173,7 +173,7 @@ export default function CalendarView() {
           ) : bookings.length === 0 ? (
             <div className="text-center py-12">
               <CalendarIcon size={64} className="mx-auto text-zinc-300 mb-4" />
-              <p className="text-zinc-600">Keine Buchungen gefunden</p>
+              <p className="text-gold-600">Keine Buchungen gefunden</p>
             </div>
           ) : (
             <DndContext
@@ -183,8 +183,8 @@ export default function CalendarView() {
             >
               <div className="space-y-8">
                 {dates.map(date => (
-                  <div key={date} className="bg-zinc-50 rounded-lg p-6">
-                    <h2 className="text-xl font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+                  <div key={date} className="bg-zinc-950 rounded-lg p-6">
+                    <h2 className="text-xl font-semibold text-gold-400 mb-4 flex items-center gap-2">
                       <CalendarIcon size={24} weight="fill" className="text-blue-600" />
                       {new Date(date).toLocaleDateString('de-DE', { 
                         weekday: 'long', 

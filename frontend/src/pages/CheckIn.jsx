@@ -140,25 +140,25 @@ export default function CheckIn() {
   return (
     <div className="flex" data-testid="checkin-page">
       <Sidebar />
-      <div className="flex-1 ml-64">
-        <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200 sticky top-0 z-40">
+      <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-gold-500/30 sticky top-0 z-40">
           <div className="p-6">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-950 font-heading">Check-In / Check-Out</h1>
-            <p className="text-zinc-600 mt-1">Gäste einchecken mit ID-Verifizierung</p>
+            <h1 className="text-4xl font-bold tracking-tight text-gold-400 font-heading">Check-In / Check-Out</h1>
+            <p className="text-gold-600 mt-1">Gäste einchecken mit ID-Verifizierung</p>
           </div>
         </div>
 
         <div className="p-8">
-          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+          <div className="bg-zinc-900 border border-gold-500/30 rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-zinc-50 border-b border-zinc-200">
-                  <TableHead className="font-semibold text-zinc-950">Gastname</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Zimmer</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Check-In</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Check-Out</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Gäste</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Aktion</TableHead>
+                <TableRow className="bg-zinc-950 border-b border-gold-500/30">
+                  <TableHead className="font-semibold text-gold-400">Gastname</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Zimmer</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Check-In</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Check-Out</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Gäste</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Aktion</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -170,7 +170,7 @@ export default function CheckIn() {
                   </TableRow>
                 ) : bookings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-zinc-600">
+                    <TableCell colSpan={6} className="text-center py-8 text-gold-600">
                       Keine ausstehenden Check-Ins
                     </TableCell>
                   </TableRow>
@@ -219,7 +219,7 @@ export default function CheckIn() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">
+                <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2">
                   Buchungsdetails
                 </p>
                 <div className="space-y-2 text-sm">
@@ -235,7 +235,7 @@ export default function CheckIn() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">
+                <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2">
                   ID-Verifizierung
                 </p>
                 {idData ? (
@@ -244,7 +244,7 @@ export default function CheckIn() {
                       <Check size={20} weight="bold" className="text-emerald-600" />
                       <span className="font-semibold text-emerald-700">ID Verifiziert</span>
                     </div>
-                    <p className="text-sm text-zinc-600 whitespace-pre-wrap">
+                    <p className="text-sm text-gold-600 whitespace-pre-wrap">
                       {idData.raw_text}
                     </p>
                   </div>
@@ -255,7 +255,7 @@ export default function CheckIn() {
             </div>
 
             <div className="border-t pt-6">
-              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-4">
+              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-4">
                 Ausweis / Reisepass scannen
               </p>
 
@@ -265,7 +265,7 @@ export default function CheckIn() {
                     ref={webcamRef}
                     audio={false}
                     screenshotFormat="image/jpeg"
-                    className="w-full rounded-lg border border-zinc-200"
+                    className="w-full rounded-lg border border-gold-500/30"
                     data-testid="webcam"
                   />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -285,10 +285,10 @@ export default function CheckIn() {
               ) : (
                 <div>
                   <div className="relative">
-                    <img src={capturedImage} alt="Captured ID" className="w-full rounded-lg border border-zinc-200" />
+                    <img src={capturedImage} alt="Captured ID" className="w-full rounded-lg border border-gold-500/30" />
                     <button
                       onClick={() => setCapturedImage(null)}
-                      className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-zinc-100 transition-colors"
+                      className="absolute top-2 right-2 p-2 bg-zinc-900 rounded-full shadow-lg hover:bg-zinc-900 transition-colors"
                     >
                       <X size={20} />
                     </button>

@@ -75,7 +75,7 @@ export default function LandingPage() {
             <Button
               onClick={() => navigate('/book')}
               data-testid="cta-book-now"
-              className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 text-lg px-8 py-6 h-auto font-bold shadow-xl shadow-gold-500/30"
+              className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-gold-400 text-lg px-8 py-6 h-auto font-bold shadow-xl shadow-gold-500/30"
             >
               Jetzt buchen
               <CaretRight size={24} weight="bold" className="ml-2" />
@@ -83,7 +83,7 @@ export default function LandingPage() {
             <Button
               onClick={() => navigate('/login')}
               variant="outline"
-              className="bg-transparent border-2 border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-zinc-950 text-lg px-8 py-6 h-auto font-semibold"
+              className="bg-transparent border-2 border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-gold-400 text-lg px-8 py-6 h-auto font-semibold"
             >
               Mitarbeiter-Login
             </Button>
@@ -119,7 +119,7 @@ export default function LandingPage() {
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent"></div>
                     <div className="absolute top-4 left-4 w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center">
-                      <Icon size={28} weight="fill" className="text-zinc-950" />
+                      <Icon size={28} weight="fill" className="text-gold-400" />
                     </div>
                   </div>
                   <div className="p-6">
@@ -174,7 +174,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <div className="py-20 bg-gradient-to-r from-gold-600 via-gold-500 to-gold-600">
         <div className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-950 mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold font-heading text-gold-400 mb-4">
             Bereit für Ihren Traumurlaub?
           </h2>
           <p className="text-xl text-zinc-800 mb-8">
@@ -202,7 +202,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="p-6 bg-zinc-900 border-gold-900/30 text-center hover:border-gold-500 transition-colors">
               <div className="w-14 h-14 bg-gold-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <EnvelopeSimple size={28} weight="fill" className="text-zinc-950" />
+                <EnvelopeSimple size={28} weight="fill" className="text-gold-400" />
               </div>
               <h3 className="text-lg font-bold text-gold-500 mb-2">E-Mail</h3>
               <a href="mailto:info@luxusvilla-ferien.de" className="text-gold-400 hover:text-gold-300 transition-colors">
@@ -212,7 +212,7 @@ export default function LandingPage() {
 
             <Card className="p-6 bg-zinc-900 border-gold-900/30 text-center hover:border-gold-500 transition-colors">
               <div className="w-14 h-14 bg-gold-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <WhatsappLogo size={28} weight="fill" className="text-zinc-950" />
+                <WhatsappLogo size={28} weight="fill" className="text-gold-400" />
               </div>
               <h3 className="text-lg font-bold text-gold-500 mb-2">WhatsApp</h3>
               <a href="https://wa.me/4915227072018" target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:text-gold-300 transition-colors">
@@ -222,7 +222,7 @@ export default function LandingPage() {
 
             <Card className="p-6 bg-zinc-900 border-gold-900/30 text-center hover:border-gold-500 transition-colors">
               <div className="w-14 h-14 bg-gold-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Phone size={28} weight="fill" className="text-zinc-950" />
+                <Phone size={28} weight="fill" className="text-gold-400" />
               </div>
               <h3 className="text-lg font-bold text-gold-500 mb-2">Website</h3>
               <a href="https://www.luxusvilla-ferien.de" target="_blank" rel="noopener noreferrer" className="text-gold-400 hover:text-gold-300 transition-colors">

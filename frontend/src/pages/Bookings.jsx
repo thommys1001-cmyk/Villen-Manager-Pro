@@ -168,7 +168,7 @@ export default function Bookings() {
     const variants = {
       pending: 'text-gold-700 bg-gold-50 border-gold-200',
       checked_in: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-      checked_out: 'text-zinc-700 bg-zinc-50 border-zinc-200',
+      checked_out: 'text-gold-500 bg-zinc-950 border-gold-500/30',
     };
     const labels = {
       pending: 'Ausstehend',
@@ -185,12 +185,12 @@ export default function Bookings() {
   return (
     <div className="flex" data-testid="bookings-page">
       <Sidebar />
-      <div className="flex-1 ml-64">
-        <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200 sticky top-0 z-40">
+      <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-gold-500/30 sticky top-0 z-40">
           <div className="p-6 flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight text-zinc-950 font-heading">Buchungen</h1>
-              <p className="text-zinc-600 mt-1">Verwalten Sie alle Buchungen</p>
+              <h1 className="text-4xl font-bold tracking-tight text-gold-400 font-heading">Buchungen</h1>
+              <p className="text-gold-600 mt-1">Verwalten Sie alle Buchungen</p>
             </div>
             <Dialog open={showDialog} onOpenChange={(open) => {
               setShowDialog(open);
@@ -211,7 +211,7 @@ export default function Bookings() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Gastname
                       </label>
                       <Input
@@ -222,7 +222,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         E-Mail
                       </label>
                       <Input
@@ -234,7 +234,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Telefon
                       </label>
                       <Input
@@ -245,7 +245,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Zimmernummer
                       </label>
                       <Input
@@ -256,7 +256,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Kategorie
                       </label>
                       <Select
@@ -275,7 +275,7 @@ export default function Bookings() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Anzahl Gäste
                       </label>
                       <Input
@@ -287,7 +287,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Check-In
                       </label>
                       <Input
@@ -299,7 +299,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Check-Out
                       </label>
                       <Input
@@ -311,7 +311,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Preis pro Nacht (€)
                       </label>
                       <Input
@@ -325,7 +325,7 @@ export default function Bookings() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Kaution (€)
                       </label>
                       <Input
@@ -361,19 +361,19 @@ export default function Bookings() {
         </div>
 
         <div className="p-8">
-          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+          <div className="bg-zinc-900 border border-gold-500/30 rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-zinc-50 border-b border-zinc-200">
-                  <TableHead className="font-semibold text-zinc-950">Gastname</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Zimmer</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Kategorie</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Check-In</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Check-Out</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Preis</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Kaution</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Status</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Aktionen</TableHead>
+                <TableRow className="bg-zinc-950 border-b border-gold-500/30">
+                  <TableHead className="font-semibold text-gold-400">Gastname</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Zimmer</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Kategorie</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Check-In</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Check-Out</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Preis</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Kaution</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Status</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -385,7 +385,7 @@ export default function Bookings() {
                   </TableRow>
                 ) : bookings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-zinc-600">
+                    <TableCell colSpan={9} className="text-center py-8 text-gold-600">
                       Keine Buchungen gefunden
                     </TableCell>
                   </TableRow>

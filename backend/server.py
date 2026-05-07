@@ -27,6 +27,8 @@ from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.pdfgen import canvas
 
+from pywebpush import webpush, WebPushException
+
 from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
 
 app = FastAPI()
@@ -820,6 +822,167 @@ def generate_invoice_pdf(booking: dict) -> BytesIO:
     doc.build(elements)
     buffer.seek(0)
     return buffer
+
+# WhatsApp Notification (Optional)
+async def send_whatsapp_notification(phone_number: str, message: str):
+    """Send WhatsApp notification using Twilio (optional)"""
+    try:
+        account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+        auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+        
+        if not account_sid or not auth_token or account_sid == "placeholder_get_from_twilio":
+            print("WhatsApp not configured")
+            return False
+        
+        try:
+            from twilio.rest import Client
+            client = Client(account_sid, auth_token)
+            
+            from_whatsapp = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
+            to_whatsapp = f"whatsapp:{phone_number}" if not phone_number.startswith("whatsapp:") else phone_number
+            
+            msg = client.messages.create(from_=from_whatsapp, body=message, to=to_whatsapp)
+            return True
+        except ImportError:
+            print("Twilio library not installed")
+            return False
+    except Exception as e:
+        print(f"WhatsApp notification failed: {str(e)}")
+        return False
+
+# Web Push Notifications
+def _send_push_sync(subscription_info: dict, payload: str):
+    """Synchronous push send (runs in thread pool)"""
+    try:
+        vapid_private_key = os.getenv("VAPID_PRIVATE_KEY")
+        vapid_claims_email = os.getenv("VAPID_CLAIMS_EMAIL", "mailto:info@luxusvilla-ferien.de")
+        
+        if not vapid_private_key:
+            return False
+        
+        webpush(
+            subscription_info=subscription_info,
+            data=payload,
+            vapid_private_key=vapid_private_key,
+            vapid_claims={"sub": vapid_claims_email}
+        )
+        return True
+    except WebPushException as e:
+        print(f"Push failed: {str(e)}")
+        return False
+    except Exception as e:
+        print(f"Push error: {str(e)}")
+        return False
+
+async def send_push_to_all(booking_data: dict):
+    """Send push notification about new booking to all subscribed users"""
+    import json as json_lib
+    
+    payload = json_lib.dumps({
+        "title": "🏨 Neue Buchung eingegangen!",
+        "body": f"{booking_data.get('guest_name')} - {booking_data.get('room_type')} - €{booking_data.get('price', 0):.2f}",
+        "icon": "https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png",
+        "badge": "https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png",
+        "tag": "new-booking",
+        "data": {
+            "url": "/bookings",
+            "booking_id": booking_data.get("_id")
+        }
+    })
+    
+    subscriptions = list(db.push_subscriptions.find())
+    for sub in subscriptions:
+        subscription_info = {"endpoint": sub["endpoint"], "keys": sub["keys"]}
+        try:
+            success = await asyncio.to_thread(_send_push_sync, subscription_info, payload)
+            if not success:
+                db.push_subscriptions.delete_one({"_id": sub["_id"]})
+        except Exception as e:
+            print(f"Push failed: {str(e)}")
+
+async def notify_new_booking(booking_data: dict):
+    """Send notifications for new booking - WhatsApp + Web Push"""
+    hotel_phone = os.getenv("COMPANY_WHATSAPP_NUMBER") or os.getenv("HOTEL_WHATSAPP_NUMBER")
+    if hotel_phone:
+        message = f"""🏨 Neue Buchung!
+
+Gast: {booking_data.get('guest_name')}
+Zimmer: {booking_data.get('room_number')} ({booking_data.get('room_type')})
+Check-In: {booking_data.get('check_in_date')}
+Check-Out: {booking_data.get('check_out_date')}
+Gäste: {booking_data.get('guests_count')}
+Preis: €{booking_data.get('price', 0):.2f}
+
+Kontakt: {booking_data.get('email')} / {booking_data.get('phone')}"""
+        await send_whatsapp_notification(hotel_phone, message)
+    
+    # Send Web Push notifications
+    await send_push_to_all(booking_data)
+
+# Push Subscription Model
+class PushSubscriptionData(BaseModel):
+    endpoint: str
+    keys: dict
+
+# Push Subscription Endpoints
+@app.get("/api/push/vapid-public-key")
+async def get_vapid_public_key():
+    return {"public_key": os.getenv("VAPID_PUBLIC_KEY", "")}
+
+@app.post("/api/push/subscribe")
+async def subscribe_push(subscription: PushSubscriptionData, user: dict = Depends(get_current_user)):
+    existing = db.push_subscriptions.find_one({"endpoint": subscription.endpoint})
+    
+    sub_data = {
+        "endpoint": subscription.endpoint,
+        "keys": subscription.keys,
+        "user_id": user["_id"],
+        "user_email": user["email"],
+        "role": user["role"],
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    if existing:
+        db.push_subscriptions.update_one({"endpoint": subscription.endpoint}, {"$set": sub_data})
+    else:
+        db.push_subscriptions.insert_one(sub_data)
+    
+    return {"success": True, "message": "Subscription saved"}
+
+@app.post("/api/push/unsubscribe")
+async def unsubscribe_push(data: dict, user: dict = Depends(get_current_user)):
+    endpoint = data.get("endpoint")
+    if endpoint:
+        db.push_subscriptions.delete_one({"endpoint": endpoint, "user_id": user["_id"]})
+    return {"success": True}
+
+@app.post("/api/push/test")
+async def test_push(user: dict = Depends(get_current_user)):
+    import json as json_lib
+    
+    subscriptions = list(db.push_subscriptions.find({"user_id": user["_id"]}))
+    if not subscriptions:
+        return {"success": False, "message": "Keine aktiven Abonnements. Aktivieren Sie Push-Benachrichtigungen zuerst."}
+    
+    payload = json_lib.dumps({
+        "title": "🔔 Test-Benachrichtigung",
+        "body": "Push-Benachrichtigungen funktionieren! Villen Manager Pro",
+        "icon": "https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png",
+        "tag": "test",
+        "data": {"url": "/dashboard"}
+    })
+    
+    sent_count = 0
+    for sub in subscriptions:
+        subscription_info = {"endpoint": sub["endpoint"], "keys": sub["keys"]}
+        try:
+            success = await asyncio.to_thread(_send_push_sync, subscription_info, payload)
+            if success:
+                sent_count += 1
+        except Exception as e:
+            print(f"Test push failed: {str(e)}")
+    
+    return {"success": True, "sent_count": sent_count, "message": f"{sent_count} Benachrichtigung(en) gesendet"}
 
 # Availability API
 @app.get("/api/availability")

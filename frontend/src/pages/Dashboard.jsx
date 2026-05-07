@@ -8,7 +8,8 @@ import {
   CurrencyDollar, 
   TrendUp,
   CheckCircle,
-  Buildings
+  Buildings,
+  Bell
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { 
@@ -24,6 +25,7 @@ import {
   Pie,
   Legend
 } from 'recharts';
+import { PushNotificationToggle } from '../components/PushNotificationToggle';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -134,7 +136,7 @@ export default function Dashboard() {
     return (
       <div className="flex bg-zinc-950 min-h-screen">
         <Sidebar />
-        <div className="flex-1 ml-64">
+        <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
           <div className="p-8">
             <div className="text-center py-12">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gold-500 border-r-transparent"></div>
@@ -148,7 +150,7 @@ export default function Dashboard() {
   return (
     <div className="flex bg-zinc-950 min-h-screen" data-testid="dashboard-page">
       <Sidebar />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
         <div className="bg-zinc-950/90 backdrop-blur-xl border-b border-gold-900/30 sticky top-0 z-40">
           <div className="p-6">
             <h1 className="text-4xl font-bold tracking-tight text-gold-500 font-heading">Dashboard</h1>
@@ -280,6 +282,18 @@ export default function Dashboard() {
                 </defs>
               </BarChart>
             </ResponsiveContainer>
+          </Card>
+
+          {/* Push Notifications */}
+          <Card className="p-6 border border-gold-500/30 bg-gradient-to-br from-zinc-900 to-zinc-950">
+            <h2 className="text-xl font-bold font-heading text-gold-400 mb-3 flex items-center gap-2">
+              <Bell size={24} weight="fill" />
+              Push-Benachrichtigungen
+            </h2>
+            <p className="text-sm text-gold-600 mb-4">
+              Erhalten Sie sofort eine Benachrichtigung auf Ihrem Gerät, sobald eine neue Buchung eingeht - auch wenn die App geschlossen ist.
+            </p>
+            <PushNotificationToggle />
           </Card>
 
           {/* Contact Info Card */}

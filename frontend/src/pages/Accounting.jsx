@@ -196,19 +196,19 @@ export default function Accounting() {
   return (
     <div className="flex" data-testid="accounting-page">
       <Sidebar />
-      <div className="flex-1 ml-64">
-        <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200 sticky top-0 z-40">
+      <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-gold-500/30 sticky top-0 z-40">
           <div className="p-6 flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight text-zinc-950 font-heading">Buchhaltung</h1>
-              <p className="text-zinc-600 mt-1">Einnahmen und Ausgaben verwalten</p>
+              <h1 className="text-4xl font-bold tracking-tight text-gold-400 font-heading">Buchhaltung</h1>
+              <p className="text-gold-600 mt-1">Einnahmen und Ausgaben verwalten</p>
             </div>
             <div className="flex gap-3">
               <Button
                 onClick={handleExport}
                 data-testid="export-button"
                 variant="outline"
-                className="border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white"
+                className="border-zinc-900 text-gold-400 hover:bg-zinc-900 hover:text-white"
               >
                 <Download size={20} className="mr-2" />
                 Exportieren
@@ -231,7 +231,7 @@ export default function Accounting() {
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Typ
                       </label>
                       <Select
@@ -249,7 +249,7 @@ export default function Accounting() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Kategorie
                       </label>
                       {formData.type === 'expense' ? (
@@ -277,7 +277,7 @@ export default function Accounting() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Beschreibung
                       </label>
                       <Input
@@ -289,7 +289,7 @@ export default function Accounting() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Betrag (€)
                       </label>
                       <Input
@@ -303,7 +303,7 @@ export default function Accounting() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                      <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                         Datum
                       </label>
                       <Input
@@ -339,24 +339,24 @@ export default function Accounting() {
 
         <div className="p-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white border border-zinc-200 rounded-lg p-6">
-              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">
+            <div className="bg-zinc-900 border border-gold-500/30 rounded-lg p-6">
+              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2">
                 Gesamteinnahmen
               </p>
               <p className="text-3xl font-bold text-emerald-600 font-heading">
                 €{totals.income.toFixed(2)}
               </p>
             </div>
-            <div className="bg-white border border-zinc-200 rounded-lg p-6">
-              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">
+            <div className="bg-zinc-900 border border-gold-500/30 rounded-lg p-6">
+              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2">
                 Gesamtausgaben
               </p>
               <p className="text-3xl font-bold text-red-600 font-heading">
                 €{totals.expense.toFixed(2)}
               </p>
             </div>
-            <div className="bg-white border border-zinc-200 rounded-lg p-6">
-              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">
+            <div className="bg-zinc-900 border border-gold-500/30 rounded-lg p-6">
+              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2">
                 Nettogewinn
               </p>
               <p className="text-3xl font-bold text-blue-600 font-heading">
@@ -365,16 +365,16 @@ export default function Accounting() {
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+          <div className="bg-zinc-900 border border-gold-500/30 rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-zinc-50 border-b border-zinc-200">
-                  <TableHead className="font-semibold text-zinc-950">Datum</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Kategorie</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Beschreibung</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Betrag</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Typ</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Aktionen</TableHead>
+                <TableRow className="bg-zinc-950 border-b border-gold-500/30">
+                  <TableHead className="font-semibold text-gold-400">Datum</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Kategorie</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Beschreibung</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Betrag</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Typ</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -386,7 +386,7 @@ export default function Accounting() {
                   </TableRow>
                 ) : entries.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-zinc-600">
+                    <TableCell colSpan={6} className="text-center py-8 text-gold-600">
                       Keine Einträge gefunden
                     </TableCell>
                   </TableRow>

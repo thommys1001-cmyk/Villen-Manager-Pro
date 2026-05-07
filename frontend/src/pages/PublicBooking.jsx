@@ -85,19 +85,19 @@ export default function PublicBooking() {
 
   if (bookingSuccess) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
         <Card className="max-w-2xl w-full p-8 text-center">
           <div className="mb-6 flex justify-center">
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
               <CheckCircle size={48} weight="fill" className="text-emerald-600" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-zinc-950 font-heading mb-4">Buchung erfolgreich!</h1>
-          <p className="text-zinc-600 mb-6">
+          <h1 className="text-3xl font-bold text-gold-400 font-heading mb-4">Buchung erfolgreich!</h1>
+          <p className="text-gold-600 mb-6">
             Vielen Dank für Ihre Buchung. Eine Bestätigungs-E-Mail wurde an <strong>{formData.email}</strong> gesendet.
           </p>
-          <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-6 mb-6 text-left">
-            <h3 className="font-semibold text-zinc-900 mb-3">Ihre Buchungsdetails:</h3>
+          <div className="bg-zinc-950 border border-gold-500/30 rounded-lg p-6 mb-6 text-left">
+            <h3 className="font-semibold text-gold-400 mb-3">Ihre Buchungsdetails:</h3>
             <div className="space-y-2 text-sm">
               <p><span className="font-medium">Zimmernummer:</span> {bookingDetails?.room_number}</p>
               <p><span className="font-medium">Zimmertyp:</span> {formData.room_type}</p>
@@ -141,7 +141,7 @@ export default function PublicBooking() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Name *
                     </label>
                     <Input
@@ -153,7 +153,7 @@ export default function PublicBooking() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       E-Mail *
                     </label>
                     <Input
@@ -166,7 +166,7 @@ export default function PublicBooking() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Telefon *
                     </label>
                     <Input
@@ -178,7 +178,7 @@ export default function PublicBooking() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Kategorie *
                     </label>
                     <Select
@@ -197,7 +197,7 @@ export default function PublicBooking() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Check-In *
                     </label>
                     <Input
@@ -210,7 +210,7 @@ export default function PublicBooking() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Check-Out *
                     </label>
                     <Input
@@ -223,7 +223,7 @@ export default function PublicBooking() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Anzahl Gäste *
                     </label>
                     <Input
@@ -237,7 +237,7 @@ export default function PublicBooking() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Preis pro Nacht (€)
                     </label>
                     <Input
@@ -252,7 +252,7 @@ export default function PublicBooking() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                    <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                       Kaution (€)
                     </label>
                     <Input
@@ -268,11 +268,11 @@ export default function PublicBooking() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                  <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                     Besondere Wünsche
                   </label>
                   <textarea
-                    className="w-full min-h-[100px] px-3 py-2 border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full min-h-[100px] px-3 py-2 border border-gold-500/30 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
                     value={formData.special_requests}
                     onChange={(e) => setFormData({ ...formData, special_requests: e.target.value })}
                     placeholder="z.B. Allergien, Nichtraucherzimmer, etc."
@@ -284,7 +284,7 @@ export default function PublicBooking() {
                     type="submit"
                     disabled={loading}
                     data-testid="submit-booking-button"
-                    className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 h-12 text-lg font-bold shadow-xl shadow-gold-500/30"
+                    className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-gold-400 h-12 text-lg font-bold shadow-xl shadow-gold-500/30"
                   >
                     {loading ? 'Buchung wird verarbeitet...' : 'Jetzt buchen'}
                   </Button>
@@ -331,15 +331,15 @@ export default function PublicBooking() {
 
             {formData.room_type && roomTypes.find(rt => rt.type === formData.room_type) && (
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-zinc-900 mb-3">
+                <h3 className="text-lg font-semibold text-gold-400 mb-3">
                   {roomTypes.find(rt => rt.type === formData.room_type).type}
                 </h3>
-                <p className="text-sm text-zinc-600 mb-4">
+                <p className="text-sm text-gold-600 mb-4">
                   {roomTypes.find(rt => rt.type === formData.room_type).description}
                 </p>
                 <div className="space-y-2">
                   {roomTypes.find(rt => rt.type === formData.room_type).features.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm text-zinc-700">
+                    <div key={idx} className="flex items-center gap-2 text-sm text-gold-500">
                       <CheckCircle size={16} weight="fill" className="text-emerald-600" />
                       {feature}
                     </div>

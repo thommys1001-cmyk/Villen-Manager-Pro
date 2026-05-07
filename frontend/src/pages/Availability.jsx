@@ -48,19 +48,19 @@ export default function Availability() {
   return (
     <div className="flex" data-testid="availability-page">
       <Sidebar />
-      <div className="flex-1 ml-64">
-        <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200 sticky top-0 z-40">
+      <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border-b border-gold-500/30 sticky top-0 z-40">
           <div className="p-6">
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-950 font-heading">Zimmerverfügbarkeit</h1>
-            <p className="text-zinc-600 mt-1">Überblick über verfügbare und belegte Zimmer</p>
+            <h1 className="text-4xl font-bold tracking-tight text-gold-400 font-heading">Zimmerverfügbarkeit</h1>
+            <p className="text-gold-600 mt-1">Überblick über verfügbare und belegte Zimmer</p>
           </div>
         </div>
 
         <div className="p-8">
-          <div className="bg-white border border-zinc-200 rounded-lg p-6 mb-6">
+          <div className="bg-zinc-900 border border-gold-500/30 rounded-lg p-6 mb-6">
             <div className="flex gap-4 items-end">
               <div className="flex-1">
-                <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                   Von
                 </label>
                 <Input
@@ -71,7 +71,7 @@ export default function Availability() {
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2 block">
+                <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
                   Bis
                 </label>
                 <Input
@@ -93,27 +93,27 @@ export default function Availability() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white border border-zinc-200 rounded-lg p-6">
-              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">
+            <div className="bg-zinc-900 border border-gold-500/30 rounded-lg p-6">
+              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2">
                 Verfügbare Zimmer
               </p>
               <p className="text-3xl font-bold text-emerald-600 font-heading">{availableCount}</p>
             </div>
-            <div className="bg-white border border-zinc-200 rounded-lg p-6">
-              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-zinc-500 mb-2">
+            <div className="bg-zinc-900 border border-gold-500/30 rounded-lg p-6">
+              <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2">
                 Belegte Zimmer
               </p>
               <p className="text-3xl font-bold text-red-600 font-heading">{occupiedCount}</p>
             </div>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+          <div className="bg-zinc-900 border border-gold-500/30 rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-zinc-50 border-b border-zinc-200">
-                  <TableHead className="font-semibold text-zinc-950">Zimmernummer</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Status</TableHead>
-                  <TableHead className="font-semibold text-zinc-950">Details</TableHead>
+                <TableRow className="bg-zinc-950 border-b border-gold-500/30">
+                  <TableHead className="font-semibold text-gold-400">Zimmernummer</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Status</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Details</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -144,7 +144,7 @@ export default function Availability() {
                             {room.bookings.map((booking, idx) => (
                               <div key={idx} className="mb-1">
                                 <span className="font-medium">{booking.guest_name}</span>
-                                <span className="text-zinc-500 ml-2">
+                                <span className="text-gold-500 ml-2">
                                   {booking.check_in} bis {booking.check_out}
                                 </span>
                               </div>
@@ -152,7 +152,7 @@ export default function Availability() {
                           </div>
                         )}
                         {room.is_available && (
-                          <span className="text-zinc-500 text-sm">Keine Buchungen</span>
+                          <span className="text-gold-500 text-sm">Keine Buchungen</span>
                         )}
                       </TableCell>
                     </TableRow>

@@ -112,7 +112,7 @@ export default function Login() {
               type="submit"
               disabled={loading}
               data-testid="login-submit-button"
-              className="w-full h-11 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 font-bold shadow-lg shadow-gold-500/20"
+              className="w-full h-11 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-gold-400 font-bold shadow-lg shadow-gold-500/20"
             >
               {loading ? 'Anmelden...' : 'Anmelden'}
             </Button>
