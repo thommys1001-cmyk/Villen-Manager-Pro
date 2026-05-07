@@ -8,7 +8,7 @@
     <style>
         body { background-color: #000 !important; color: #D4AF37; font-family: sans-serif; margin: 0; padding: 15px; }
         
-        /* Logo Fix */
+        /* Der ultimative Logo-Fix für MacBook & Handy */
         .logo-header {
             width: 130px; height: 130px; 
             border-radius: 50%; border: 3px solid #D4AF37; 
@@ -16,12 +16,12 @@
             display: flex; align-items: center; justify-content: center;
         }
         .logo-header img {
-            width: 100%; height: 100%; object-fit: cover; transform: scale(2.2);
+            width: 100%; height: 100%; object-fit: cover; transform: scale(2.3);
         }
 
         .card {
             background: #0a0a0a; border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 20px; padding: 20px; max-width: 480px; margin: auto;
+            border-radius: 20px; padding: 25px; max-width: 480px; margin: auto;
         }
 
         label {
@@ -29,20 +29,16 @@
             color: #D4AF37; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
         }
 
-        /* Styling für das Auswahlmenü und Eingabefelder */
         select, input {
             width: 100%; background: #1a1a1a; border: 1px solid #333;
-            color: #fff !important; padding: 12px; border-radius: 10px;
-            margin-bottom: 20px; font-size: 16px; appearance: none; -webkit-appearance: none;
+            color: #fff !important; padding: 14px; border-radius: 10px;
+            margin-bottom: 20px; font-size: 16px; outline: none;
         }
-
-        /* Damit man den Text im Dropdown auch sieht */
-        select option { background: #1a1a1a; color: #fff; }
 
         .btn-gold {
             background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%);
             color: #000; font-weight: bold; width: 100%; padding: 16px;
-            border-radius: 12px; border: none; text-transform: uppercase; cursor: pointer;
+            border-radius: 12px; border: none; text-transform: uppercase; cursor: pointer; font-size: 14px;
         }
 
         video { width: 100%; border-radius: 15px; margin-top: 15px; border: 1px solid #D4AF37; display: none; }
@@ -54,36 +50,63 @@
         <img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg" alt="Logo">
     </div>
 
-    <h1 style="text-align: center; color: #F1D279; margin-bottom: 25px; font-size: 20px; font-weight: bold;">CHECK-IN MANAGER</h1>
+    <h1 style="text-align: center; color: #F1D279; margin-bottom: 25px; font-size: 20px; font-weight: bold; letter-spacing: 2px;">CHECK-IN PRO</h1>
 
     <div class="card">
-        <label>Kategorie wählen</label>
-        <select id="kategorie_select">
-            <option value="" disabled selected>Bitte wählen...</option>
-            <option value="Villa">Villa</option>
-            <option value="Ferienhaus">Ferienhaus</option>
-            <option value="Apartment">Apartment</option>
-            <option value="Zimmer">Zimmer</option>
+        <label>1. Kategorie wählen</label>
+        <select id="kategorie" onchange="updateObjekte()">
+            <option value="">-- Bitte wählen --</option>
+            <option value="villen">Villen</option>
+            <option value="ferienhaeuser">Ferienhäuser</option>
+            <option value="apartments">Apartments</option>
+            <option value="zimmer">Zimmer</option>
         </select>
 
-        <label>Objekt Name / Nr.</label>
-        <input type="text" id="objekt_name" placeholder="z.B. Villa Deluxe">
+        <label id="objektLabel">2. Objekt auswählen</label>
+        <select id="objekt_liste">
+            <option value="">Zuerst Kategorie wählen...</option>
+        </select>
 
-        <label>Gast Name</label>
+        <label>3. Gast Name</label>
         <input type="text" id="gast_name" placeholder="Vollständiger Name">
 
-        <button onclick="activateScanner()" class="btn-gold">Scan Starten</button>
+        <button onclick="startApp()" class="btn-gold">Scan Starten</button>
         
-        <video id="video_stream" autoplay playsinline></video>
+        <video id="webcam" autoplay playsinline></video>
     </div>
 
     <script>
-        async function activateScanner() {
-            const v = document.getElementById('video_stream');
-            const kat = document.getElementById('kategorie_select').value;
+        // HIER KANNST DU UNBEGRENZT NAMEN HINZUFÜGEN
+        const datenbank = {
+            "villen": ["Villa Sol", "Villa Luna", "Villa Mar", "Villa Paradiso"],
+            "ferienhaeuser": ["Finca Rustica", "Haus am See", "Waldhaus"],
+            "apartments": ["App. 01 - EG", "App. 02 - OG", "Penthouse"],
+            "zimmer": ["Zimmer 101", "Zimmer 102", "Suite Royal"]
+        };
+
+        function updateObjekte() {
+            const kat = document.getElementById('kategorie').value;
+            const objSelect = document.getElementById('objekt_liste');
             
-            if(!kat) {
-                alert("Bitte wähle zuerst eine Kategorie aus!");
+            // Liste leeren
+            objSelect.innerHTML = '<option value="">-- Name wählen --</option>';
+
+            if (kat && datenbank[kat]) {
+                datenbank[kat].forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.innerText = name;
+                    objSelect.appendChild(opt);
+                });
+            }
+        }
+
+        async function startApp() {
+            const v = document.getElementById('webcam');
+            const obj = document.getElementById('objekt_liste').value;
+            
+            if(!obj) {
+                alert("Bitte wählen Sie ein Objekt aus!");
                 return;
             }
 
@@ -94,7 +117,7 @@
                 });
                 v.srcObject = s;
             } catch (e) {
-                alert("Kamera-Zugriff wurde verweigert.");
+                alert("Kamera-Fehler");
             }
         }
     </script>
