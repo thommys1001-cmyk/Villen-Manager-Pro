@@ -2,58 +2,117 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Villen Manager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000; margin: 0; padding: 20px; color: #D4AF37; font-family: sans-serif; text-align: center; }
+        body { background: #000; color: #D4AF37; font-family: sans-serif; margin: 0; padding: 20px; }
         
-        /* DER ULTIMATIVE LOGO-FIX */
-        .logo-wrapper {
-            width: 140px;
-            height: 140px;
-            margin: 0 auto 30px;
+        /* ULTIMATIVER LOGO FIX - Schneidet weiß sicher weg */
+        .logo-circle {
+            width: 140px; height: 140px;
             border-radius: 50%;
             border: 3px solid #D4AF37;
-            overflow: hidden; /* Das schneidet alles draußen ab */
+            margin: 0 auto 20px;
+            overflow: hidden;
             background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-circle img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transform: scale(2.2); /* Sehr starker Zoom gegen den weißen Rand */
         }
 
-        .logo-wrapper img {
+        .card {
+            background: #050505;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 500px;
+            margin: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        label { display: block; text-align: left; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        
+        select, input {
             width: 100%;
-            height: 100%;
-            object-fit: cover; /* Füllt den Kreis komplett aus */
-            transform: scale(2.0); /* SEHR STARKER ZOOM - schneidet den Rand sicher weg */
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            outline: none;
         }
 
-        .container { border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; background: #050505; padding: 30px; max-width: 450px; margin: auto; }
-        video { width: 100%; border-radius: 15px; border: 1px solid #D4AF37; margin-bottom: 20px; }
-        .btn { background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%); color: #000; font-weight: bold; width: 100%; padding: 18px; border-radius: 12px; border: none; text-transform: uppercase; cursor: pointer; font-size: 16px; }
+        select:focus { border-color: #D4AF37; }
+
+        .gold-btn {
+            background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%);
+            color: #000;
+            font-weight: bold;
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        video { width: 100%; border-radius: 15px; border: 1px solid #D4AF37; margin-top: 15px; background: #000; }
     </style>
 </head>
 <body>
 
-    <div class="logo-wrapper"><img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg?v=2" class="...">
+    <div class="logo-circle">
+        <img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg" alt="Logo">
     </div>
 
-    <h1 style="color: #F1D279; font-size: 24px; margin-bottom: 30px; font-weight: bold;">VILLEN MANAGER PRO</h1>
+    <h1 style="text-align: center; color: #F1D279; margin-bottom: 30px; font-weight: bold;">CHECK-IN MANAGER</h1>
 
-    <div class="container">
-        <video id="v" autoplay playsinline></video>
-        <button onclick="start()" class="btn">Ausweis scannen</button>
+    <div class="card">
+        <label>Objekt-Kategorie</label>
+        <select id="kategorie">
+            <option value="">-- Bitte wählen --</option>
+            <option value="villa">Villa</option>
+            <option value="apartment">Apartment</option>
+            <option value="ferienhaus">Ferienhaus</option>
+            <option value="zimmer">Einzelzimmer</option>
+        </select>
+
+        <label>Name / Nummer der Einheit</label>
+        <input type="text" id="einheit" placeholder="z.B. Villa Sol oder Zimmer 101">
+
+        <label>Gast Name</label>
+        <input type="text" id="gast" placeholder="Name des Gastes">
+
+        <button onclick="startScan()" class="gold-btn">Ausweis scannen & einchecken</button>
+        
+        <video id="video" autoplay playsinline style="display:none;"></video>
     </div>
 
     <script>
-        async function start() {
-            const video = document.getElementById('v');
+        async function startScan() {
+            const v = document.getElementById('video');
+            const kat = document.getElementById('kategorie').value;
+            
+            if(!kat) {
+                alert("Bitte wählen Sie zuerst eine Kategorie aus!");
+                return;
+            }
+
+            v.style.display = "block";
             try {
-                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                video.srcObject = s;
-            } catch (e) { alert("Kamera-Fehler"); }
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: { ideal: "environment" } } 
+                });
+                v.srcObject = stream;
+            } catch (e) {
+                alert("Kamera konnte nicht gestartet werden.");
+            }
         }
     </script>
 </body>
