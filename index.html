@@ -2,35 +2,65 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Villen Manager Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Villen Manager Pro - Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;700&display=swap');
-        body { background: #000; color: #ccc; font-family: 'Inter', sans-serif; margin: 0; }
-        .luxury-logo { font-family: 'Cinzel', serif; background: linear-gradient(to bottom, #F1D279, #B8962E); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .sig-box { border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 15px; background: #050505; padding: 20px; max-width: 500px; margin: 20px auto; }
-        .gold-btn { background: linear-gradient(to bottom, #D4AF37, #8A6D1C); color: #000; font-weight: bold; padding: 15px 30px; border-radius: 10px; text-transform: uppercase; cursor: pointer; border: none; width: 100%; }
-        video { width: 100%; border-radius: 10px; border: 1px solid #D4AF37; background: #111; margin-bottom: 20px; }
+        body { background: #000; color: #D4AF37; font-family: sans-serif; margin: 0; padding: 20px; text-align: center; }
+        .scan-container { border: 2px solid #D4AF37; border-radius: 20px; overflow: hidden; background: #111; position: relative; margin-bottom: 20px; }
+        video { width: 100%; height: auto; display: block; }
+        .gold-button { background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%); color: #000; font-weight: bold; padding: 15px; border-radius: 12px; width: 100%; border: none; text-transform: uppercase; font-size: 16px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
     </style>
 </head>
-<body class="bg-black text-center p-6">
-    <h1 class="luxury-logo text-2xl font-bold mb-10">Villen Manager Pro</h1>
-    <div class="sig-box">
-        <h2 class="text-[#D4AF37] text-xs tracking-widest mb-6 uppercase">Ausweis-Scanner</h2>
-        <video id="webcam" autoplay playsinline></video>
-        <button onclick="startCam()" class="gold-btn">Scan Starten</button>
+<body>
+
+    <h1 style="color: #F1D279; font-size: 24px; margin-bottom: 20px;">Ausweis Scanner</h1>
+
+    <div class="scan-container">
+        <video id="video" autoplay playsinline></video>
     </div>
+
+    <button onclick="startBackCamera()" class="gold-button">Rückkamera aktivieren</button>
+
+    <p id="error-log" style="color: red; font-size: 12px; margin-top: 10px;"></p>
+
     <script>
-        async function startCam() {
-            const v = document.getElementById('webcam');
+        async function startBackCamera() {
+            const video = document.getElementById('video');
+            const errorLog = document.getElementById('error-log');
+
+            // Falls schon ein Stream läuft, stoppen wir ihn zuerst
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: {
+                    // "facingMode: exact environment" zwingt das Handy zur Rückkamera
+                    facingMode: { exact: "environment" }
+                }
+            };
+
             try {
-                const s = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: { ideal: 'environment' } } 
-                });
-                v.srcObject = s;
-            } catch (e) { alert('Fehler: ' + e); }
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                errorLog.innerText = ""; // Fehler löschen, wenn es klappt
+            } catch (err) {
+                console.error("Fehler mit exact:", err);
+                // Zweiter Versuch: Falls "exact" nicht geht, versuchen wir es weniger streng
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: "environment" } 
+                    });
+                    video.srcObject = stream;
+                } catch (err2) {
+                    errorLog.innerText = "Fehler: Bitte Kamera-Zugriff in den Handy-Einstellungen erlauben!";
+                }
+            }
         }
+
+        // Startet die Kamera automatisch beim Laden der Seite (Versuch)
+        window.onload = startBackCamera;
     </script>
 </body>
 </html>
