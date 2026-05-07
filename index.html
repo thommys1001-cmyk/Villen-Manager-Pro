@@ -3,64 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Villen Manager Pro - Scanner</title>
+    <title>Villen Manager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #000; color: #D4AF37; font-family: sans-serif; margin: 0; padding: 20px; text-align: center; }
-        .scan-container { border: 2px solid #D4AF37; border-radius: 20px; overflow: hidden; background: #111; position: relative; margin-bottom: 20px; }
-        video { width: 100%; height: auto; display: block; }
-        .gold-button { background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%); color: #000; font-weight: bold; padding: 15px; border-radius: 12px; width: 100%; border: none; text-transform: uppercase; font-size: 16px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
+        /* Logo Fix: Schneidet den weißen Rand weg */
+        .logo-container { width: 120px; height: 120px; border-radius: 50%; border: 2px solid #D4AF37; overflow: hidden; margin: 0 auto 20px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .logo-container img { width: 100%; height: 100%; object-cover: cover; transform: scale(1.4); }
+        .scan-box { border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; background: #050505; padding: 20px; max-width: 450px; margin: auto; }
+        video { width: 100%; border-radius: 15px; border: 1px solid #D4AF37; background: #111; margin-bottom: 20px; }
+        .gold-btn { background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%); color: #000; font-weight: bold; width: 100%; padding: 15px; border-radius: 12px; border: none; text-transform: uppercase; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h1 style="color: #F1D279; font-size: 24px; margin-bottom: 20px;">Ausweis Scanner</h1>
-
-    <div class="scan-container">
-        <video id="video" autoplay playsinline></video>
+    <div class="logo-container">
+        <img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg" alt="Logo">
     </div>
 
-    <button onclick="startBackCamera()" class="gold-button">Rückkamera aktivieren</button>
+    <h1 style="color: #F1D279; font-size: 22px; margin-bottom: 25px; font-weight: bold;">VILLEN MANAGER PRO</h1>
 
-    <p id="error-log" style="color: red; font-size: 12px; margin-top: 10px;"></p>
+    <div class="scan-box">
+        <video id="video" autoplay playsinline></video>
+        <button onclick="startScan()" class="gold-btn">Ausweis scannen</button>
+    </div>
 
     <script>
-        async function startBackCamera() {
-            const video = document.getElementById('video');
-            const errorLog = document.getElementById('error-log');
-
-            // Falls schon ein Stream läuft, stoppen wir ihn zuerst
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-            }
-
-            const constraints = {
-                video: {
-                    // "facingMode: exact environment" zwingt das Handy zur Rückkamera
-                    facingMode: { exact: "environment" }
-                }
-            };
-
+        async function startScan() {
+            const v = document.getElementById('video');
             try {
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = stream;
-                errorLog.innerText = ""; // Fehler löschen, wenn es klappt
-            } catch (err) {
-                console.error("Fehler mit exact:", err);
-                // Zweiter Versuch: Falls "exact" nicht geht, versuchen wir es weniger streng
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: "environment" } 
-                    });
-                    video.srcObject = stream;
-                } catch (err2) {
-                    errorLog.innerText = "Fehler: Bitte Kamera-Zugriff in den Handy-Einstellungen erlauben!";
-                }
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: { ideal: "environment" } } 
+                });
+                v.srcObject = stream;
+            } catch (e) {
+                alert("Kamera-Zugriff verweigert oder nicht gefunden.");
             }
         }
-
-        // Startet die Kamera automatisch beim Laden der Seite (Versuch)
-        window.onload = startBackCamera;
     </script>
 </body>
 </html>
