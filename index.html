@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Villen Manager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;700&display=swap');
+        body { background: #000; color: #ccc; font-family: 'Inter', sans-serif; margin: 0; }
+        .luxury-logo { font-family: 'Cinzel', serif; background: linear-gradient(to bottom, #F1D279, #B8962E); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .sig-box { border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 15px; background: #050505; padding: 20px; max-width: 500px; margin: 20px auto; }
+        .gold-btn { background: linear-gradient(to bottom, #D4AF37, #8A6D1C); color: #000; font-weight: bold; padding: 15px 30px; border-radius: 10px; text-transform: uppercase; cursor: pointer; border: none; width: 100%; }
+        video { width: 100%; border-radius: 10px; border: 1px solid #D4AF37; background: #111; margin-bottom: 20px; }
+    </style>
+</head>
+<body class="bg-black text-center p-6">
+    <h1 class="luxury-logo text-2xl font-bold mb-10">Villen Manager Pro</h1>
+    <div class="sig-box">
+        <h2 class="text-[#D4AF37] text-xs tracking-widest mb-6 uppercase">Ausweis-Scanner</h2>
+        <video id="webcam" autoplay playsinline></video>
+        <button onclick="startCam()" class="gold-btn">Scan Starten</button>
+    </div>
+    <script>
+        async function startCam() {
+            const v = document.getElementById('webcam');
+            try {
+                const s = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: { ideal: 'environment' } } 
+                });
+                v.srcObject = s;
+            } catch (e) { alert('Fehler: ' + e); }
+        }
+    </script>
+</body>
+</html>
