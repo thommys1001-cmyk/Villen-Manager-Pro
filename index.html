@@ -3,25 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Villen Manager Pro</title>
+    <title>Villen Manager Pro - Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #000; color: #D4AF37; font-family: sans-serif; margin: 0; padding: 20px; text-align: center; }
-        /* Logo Fix: Schneidet den weißen Rand weg */
-        .logo-container { width: 120px; height: 120px; border-radius: 50%; border: 2px solid #D4AF37; overflow: hidden; margin: 0 auto 20px; background: #000; display: flex; align-items: center; justify-content: center; }
-        .logo-container img { width: 100%; height: 100%; object-cover: cover; transform: scale(1.4); }
-        .scan-box { border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; background: #050505; padding: 20px; max-width: 450px; margin: auto; }
+        
+        /* LOGO-FIX: Stärkerer Zoom (scale 1.8), um den Rand wegzuschneiden */
+        .logo-container { 
+            width: 130px; 
+            height: 130px; 
+            border-radius: 50%; 
+            border: 3px solid #D4AF37; /* Ein etwas dickerer goldener Rand sieht edler aus */
+            overflow: hidden; 
+            margin: 0 auto 25px; 
+            background: #000; /* Schwarzer Hintergrund, falls das Bild zu klein ist */
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); /* Leichter Gold-Schimmer */
+        }
+        .logo-container img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            /* HIER IST DIE ÄNDERUNG: Von 1.4 auf 1.8 erhöht */
+            transform: scale(1.8); 
+        }
+
+        .scan-box { border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; background: #050505; padding: 25px; max-width: 450px; margin: auto; }
         video { width: 100%; border-radius: 15px; border: 1px solid #D4AF37; background: #111; margin-bottom: 20px; }
-        .gold-btn { background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%); color: #000; font-weight: bold; width: 100%; padding: 15px; border-radius: 12px; border: none; text-transform: uppercase; cursor: pointer; }
+        .gold-btn { background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%); color: #000; font-weight: bold; width: 100%; padding: 18px; border-radius: 12px; border: none; text-transform: uppercase; cursor: pointer; font-size: 16px; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
     <div class="logo-container">
-        <img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg" alt="Logo">
+        <img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg" alt="Villen Manager Logo">
     </div>
 
-    <h1 style="color: #F1D279; font-size: 22px; margin-bottom: 25px; font-weight: bold;">VILLEN MANAGER PRO</h1>
+    <h1 style="color: #F1D279; font-size: 24px; margin-bottom: 30px; font-weight: bold; letter-spacing: 1px;">VILLEN MANAGER PRO</h1>
 
     <div class="scan-box">
         <video id="video" autoplay playsinline></video>
@@ -32,12 +52,13 @@
         async function startScan() {
             const v = document.getElementById('video');
             try {
+                // Kamera-Fix: Rückkamera erzwingen
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: { ideal: "environment" } } 
                 });
                 v.srcObject = stream;
             } catch (e) {
-                alert("Kamera-Zugriff verweigert oder nicht gefunden.");
+                alert("Kamera-Zugriff verweigert oder nicht gefunden. Bitte in den Einstellungen erlauben.");
             }
         }
     </script>
