@@ -272,14 +272,24 @@ export default function CheckIn() {
                 Ausweis / Reisepass scannen
               </p>
 
-              {!capturedImage ? (
+             {!capturedImage ? (
                 <div className="relative">
+                  {/* Button zum Umschalten */}
+                  <div className="absolute top-4 right-4 z-50">
+                    <Button
+                      onClick={switchCamera}
+                      type="button"
+                      className="bg-zinc-900/80 hover:bg-zinc-950 backdrop-blur-md border border-gold-500/50 rounded-full p-3 h-auto"
+                    >
+                      <ArrowsClockwise size={24} weight="bold" className="text-gold-400" />
+                    </Button>
+                  </div>
                   <Webcam
                     ref={webcamRef}
                     audio={false}
                     screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
                     className="w-full rounded-lg border border-gold-500/30"
-                    data-testid="webcam"
                   />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="border-4 border-white/50 rounded-lg w-2/3 h-2/3"></div>
@@ -287,7 +297,6 @@ export default function CheckIn() {
                   <div className="mt-4">
                     <Button
                       onClick={capturePhoto}
-                      data-testid="capture-photo-button"
                       className="w-full bg-zinc-900 hover:bg-zinc-950 text-white"
                     >
                       <Camera size={20} weight="fill" className="mr-2" />
@@ -295,7 +304,103 @@ export default function CheckIn() {
                     </Button>
                   </div>
                 </div>
-              ) : (
+              ) : ({!capturedImage ? (
+                <div className="relative">
+                  {/* Button zum Umschalten */}
+                  <div className="absolute top-4 right-4 z-50">
+                    <Button
+                      onClick={switchCamera}
+                      type="button"
+                      className="bg-zinc-900/80 hover:bg-zinc-950 backdrop-blur-md border border-gold-500/50 rounded-full p-3 h-auto"
+                    >
+                      <ArrowsClockwise size={24} weight="bold" className="text-gold-400" />
+                    </Button>
+                  </div>
+                  <Webcam
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
+                    className="w-full rounded-lg border border-gold-500/30"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="border-4 border-white/50 rounded-lg w-2/3 h-2/3"></div>
+                  </div>
+                  <div className="mt-4">
+                    <Button
+                      onClick={capturePhoto}
+                      className="w-full bg-zinc-900 hover:bg-zinc-950 text-white"
+                    >
+                      <Camera size={20} weight="fill" className="mr-2" />
+                      Foto aufnehmen
+                    </Button>
+                  </div>
+                </div>
+              ) : ({!capturedImage ? (
+                <div className="relative">
+                  {/* Button zum Umschalten */}
+                  <div className="absolute top-4 right-4 z-50">
+                    <Button
+                      onClick={switchCamera}
+                      type="button"
+                      className="bg-zinc-900/80 hover:bg-zinc-950 backdrop-blur-md border border-gold-500/50 rounded-full p-3 h-auto"
+                    >
+                      <ArrowsClockwise size={24} weight="bold" className="text-gold-400" />
+                    </Button>
+                  </div>
+                  <Webcam
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
+                    className="w-full rounded-lg border border-gold-500/30"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="border-4 border-white/50 rounded-lg w-2/3 h-2/3"></div>
+                  </div>
+                  <div className="mt-4">
+                    <Button
+                      onClick={capturePhoto}
+                      className="w-full bg-zinc-900 hover:bg-zinc-950 text-white"
+                    >
+                      <Camera size={20} weight="fill" className="mr-2" />
+                      Foto aufnehmen
+                    </Button>
+                  </div>
+                </div>
+              ) : ({!capturedImage ? (
+                <div className="relative">
+                  {/* Button zum Umschalten */}
+                  <div className="absolute top-4 right-4 z-50">
+                    <Button
+                      onClick={switchCamera}
+                      type="button"
+                      className="bg-zinc-900/80 hover:bg-zinc-950 backdrop-blur-md border border-gold-500/50 rounded-full p-3 h-auto"
+                    >
+                      <ArrowsClockwise size={24} weight="bold" className="text-gold-400" />
+                    </Button>
+                  </div>
+                  <Webcam
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
+                    className="w-full rounded-lg border border-gold-500/30"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="border-4 border-white/50 rounded-lg w-2/3 h-2/3"></div>
+                  </div>
+                  <div className="mt-4">
+                    <Button
+                      onClick={capturePhoto}
+                      className="w-full bg-zinc-900 hover:bg-zinc-950 text-white"
+                    >
+                      <Camera size={20} weight="fill" className="mr-2" />
+                      Foto aufnehmen
+                    </Button>
+                  </div>
+                </div>
+              ) : (s
                 <div>
                   <div className="relative">
                     <img src={capturedImage} alt="Captured ID" className="w-full rounded-lg border border-gold-500/30" />
