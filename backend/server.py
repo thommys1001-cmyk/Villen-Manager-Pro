@@ -924,6 +924,69 @@ class PushSubscriptionData(BaseModel):
     endpoint: str
     keys: dict
 
+class PropertyCreate(BaseModel):
+    name: str
+    category: str  # Villa, Hotel, Ferienhaus, Appartment, Zimmer
+    description: Optional[str] = None
+    address: Optional[str] = None
+    default_price: Optional[float] = None
+    default_deposit: Optional[float] = None
+    max_guests: Optional[int] = 2
+
+class PropertyUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    description: Optional[str] = None
+    address: Optional[str] = None
+    default_price: Optional[float] = None
+    default_deposit: Optional[float] = None
+    max_guests: Optional[int] = None
+
+# Properties (Immobilien) Endpoints
+@app.get("/api/properties")
+async def get_properties(user: dict = Depends(get_current_user)):
+    properties = list(db.properties.find())
+    for p in properties:
+        p["_id"] = str(p["_id"])
+    return properties
+
+@app.get("/api/public/properties")
+async def get_public_properties():
+    """Public endpoint to list properties for booking"""
+    properties = list(db.properties.find({}, {"_id": 0, "created_by": 0}))
+    return properties
+
+@app.post("/api/properties")
+async def create_property(prop: PropertyCreate, user: dict = Depends(get_current_user)):
+    prop_data = prop.dict()
+    prop_data["created_at"] = datetime.now(timezone.utc)
+    prop_data["created_by"] = user["_id"]
+    
+    result = db.properties.insert_one(prop_data)
+    prop_data["_id"] = str(result.inserted_id)
+    return prop_data
+
+@app.patch("/api/properties/{property_id}")
+async def update_property(property_id: str, update: PropertyUpdate, user: dict = Depends(get_current_user)):
+    update_data = {k: v for k, v in update.dict().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    result = db.properties.update_one({"_id": ObjectId(property_id)}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    prop = db.properties.find_one({"_id": ObjectId(property_id)})
+    prop["_id"] = str(prop["_id"])
+    return prop
+
+@app.delete("/api/properties/{property_id}")
+async def delete_property(property_id: str, user: dict = Depends(get_current_user)):
+    result = db.properties.delete_one({"_id": ObjectId(property_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Property not found")
+    return {"message": "Property deleted"}
+
 # Push Subscription Endpoints
 @app.get("/api/push/vapid-public-key")
 async def get_vapid_public_key():

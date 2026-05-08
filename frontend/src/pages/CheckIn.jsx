@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog';
-import { Camera, DoorOpen, X, Check } from '@phosphor-icons/react';
+import { Camera, DoorOpen, X, Check, ArrowsClockwise } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export default function CheckIn() {
@@ -29,7 +29,20 @@ export default function CheckIn() {
   const [scanning, setScanning] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [idData, setIdData] = useState(null);
+  const [facingMode, setFacingMode] = useState('environment');
   const webcamRef = useRef(null);
+
+  const videoConstraints = {
+    facingMode: facingMode,
+    width: { ideal: 1280 },
+    height: { ideal: 720 }
+  };
+
+  const switchCamera = () => {
+    setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
+    setCapturedImage(null);
+    toast.info(facingMode === 'environment' ? 'Frontkamera aktiviert' : 'Rückkamera aktiviert');
+  };
 
   const fetchBookings = useCallback(async () => {
     try {
