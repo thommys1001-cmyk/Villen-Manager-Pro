@@ -8,21 +8,20 @@
     <style>
         body { background-color: #000 !important; color: #D4AF37; font-family: sans-serif; margin: 0; padding: 15px; }
         
-        /* LOGO OHNE RAND - EXTREM-FIX */
-        .logo-frame {
+        /* LOGO FIX GEGEN WEISSEN RAND */
+        .logo-shield {
             width: 140px; height: 140px; 
             border-radius: 50%; border: 3px solid #D4AF37; 
             margin: 0 auto 20px; overflow: hidden; background: #000;
             display: flex; align-items: center; justify-content: center;
         }
-        .logo-frame img {
+        .logo-shield img {
             width: 100%; height: 100%; object-fit: cover; transform: scale(2.5);
         }
 
-        .card {
+        .card-main {
             background: #080808; border: 1px solid rgba(212, 175, 55, 0.3);
             border-radius: 20px; padding: 25px; max-width: 500px; margin: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
 
         label { display: block; text-align: left; font-size: 10px; color: #D4AF37; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
@@ -39,72 +38,88 @@
             border-radius: 14px; border: none; text-transform: uppercase; font-size: 14px; cursor: pointer;
         }
 
-        .sub-text { color: #888; font-size: 13px; margin-bottom: 30px; line-height: 1.5; }
+        .description { color: #888; font-size: 13px; margin-bottom: 30px; line-height: 1.5; text-align: center; }
         video { width: 100%; border-radius: 15px; margin-top: 15px; border: 1px solid #D4AF37; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="logo-frame">
+    <div class="logo-shield">
         <img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg" alt="Logo">
     </div>
 
     <h1 style="text-align: center; color: #F1D279; font-size: 22px; font-weight: bold; margin-bottom: 5px;">VILLEN MANAGER PRO</h1>
-    <p class="sub-text">Professionelle Verwaltung für Hotel, Villen, Apartment & Zimmer</p>
+    <p class="description">Professionelle Verwaltung für Hotel, Villen, Apartment & Zimmer</p>
 
-    <div class="card">
-        <label>Kategorie auswählen</label>
-        <select id="main_kat" onchange="updateNamen()">
+    <div class="card-main">
+        <label>1. Kategorie auswählen</label>
+        <select id="kategorie_auswahl" onchange="ladeUntermenue()">
             <option value="">-- Bitte wählen --</option>
             <option value="hotel">Hotel</option>
             <option value="villen">Villen</option>
+            <option value="ferienhaeuser">Ferienhäuser</option>
             <option value="apartment">Apartment</option>
             <option value="zimmer">Zimmer</option>
         </select>
 
-        <label>Objekt Name / Nr.</label>
-        <select id="sub_name">
+        <label>2. Name / Objekt auswählen</label>
+        <select id="objekt_name">
             <option value="">Zuerst Kategorie wählen...</option>
         </select>
 
-        <label>Gast Name</label>
-        <input type="text" id="gast" placeholder="Vor- und Nachname">
+        <label>3. Gast Name</label>
+        <input type="text" id="gast_name" placeholder="Name eintragen">
 
-        <button onclick="startScan()" class="btn-gold">Check-In / Scan Starten</button>
+        <button onclick="startCheckIn()" class="btn-gold">Check-In / Scanner Starten</button>
         
-        <video id="video" autoplay playsinline></video>
+        <video id="scanner_video" autoplay playsinline></video>
     </div>
 
     <script>
-        // HIER KANNST DU DEINE NAMEN EINTRAGEN
-        const liste = {
-            "hotel": ["Zentral Hotel", "Park Hotel", "Seehotel"],
-            "villen": ["Villa Mali Svor", "Villa Dvor", "Villa Luxus"],
-            "apartment": ["App. Blue Ocean", "Penthouse City", "App. 104"],
-            "zimmer": ["Zimmer 01", "Zimmer 02", "Suite 500"]
+        // HIER KANNST DU DEINE DATEN UNBEGRENZT EINTRAGEN
+        const meineDaten = {
+            "hotel": ["Grand Hotel", "Beach Resort", "City Hotel"],
+            "villen": ["Villa Mali Svor", "Villa Panorama", "Villa Royal"],
+            "ferienhaeuser": ["Haus am Meer", "Landhaus Bergview"],
+            "apartment": ["App. Blue 01", "Penthouse A", "Studio 105"],
+            "zimmer": ["Zimmer 101", "Zimmer 102", "Suite 200"]
         };
 
-        function updateNamen() {
-            const kat = document.getElementById('main_kat').value;
-            const sub = document.getElementById('sub_name');
+        function ladeUntermenue() {
+            const kat = document.getElementById('kategorie_auswahl').value;
+            const sub = document.getElementById('objekt_name');
+            
+            // Untermenü leeren
             sub.innerHTML = '<option value="">-- Name wählen --</option>';
-            if(kat && liste[kat]) {
-                liste[kat].forEach(n => {
-                    let o = document.createElement('option');
-                    o.value = n; o.textContent = n;
-                    sub.appendChild(o);
+            
+            if(kat && meineDaten[kat]) {
+                meineDaten[kat].forEach(name => {
+                    let option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    sub.appendChild(option);
                 });
             }
         }
 
-        async function startScan() {
-            const v = document.getElementById('video');
-            if(!document.getElementById('sub_name').value) return alert("Bitte Objekt wählen!");
+        async function startCheckIn() {
+            const v = document.getElementById('scanner_video');
+            const auswahl = document.getElementById('objekt_name').value;
+            
+            if(!auswahl) {
+                alert("Bitte wählen Sie ein Objekt aus der Liste aus!");
+                return;
+            }
+
             v.style.display = "block";
             try {
-                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                const s = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } 
+                });
                 v.srcObject = s;
-            } catch (e) { alert("Kamera-Fehler"); }
+            } catch (e) {
+                alert("Kamera konnte nicht gestartet werden.");
+            }
         }
     </script>
 </body>
