@@ -8,117 +8,106 @@
     <style>
         body { background-color: #000 !important; color: #D4AF37; font-family: sans-serif; margin: 0; padding: 15px; }
         
-        /* Der ultimative Logo-Fix für MacBook & Handy */
-        .logo-header {
-            width: 130px; height: 130px; 
+        /* LOGO FIX */
+        .logo-box {
+            width: 140px; height: 140px; 
             border-radius: 50%; border: 3px solid #D4AF37; 
-            margin: 0 auto 20px; overflow: hidden; background: #000;
+            margin: 0 auto 30px; overflow: hidden; background: #000;
             display: flex; align-items: center; justify-content: center;
         }
-        .logo-header img {
-            width: 100%; height: 100%; object-fit: cover; transform: scale(2.3);
+        .logo-box img {
+            width: 100%; height: 100%; object-fit: cover; transform: scale(2.4);
         }
 
-        .card {
-            background: #0a0a0a; border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 20px; padding: 25px; max-width: 480px; margin: auto;
+        .card-pro {
+            background: #080808; border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 25px; padding: 30px; max-width: 500px; margin: auto;
         }
 
-        label {
-            display: block; text-align: left; font-size: 11px; 
-            color: #D4AF37; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;
-        }
+        label { display: block; text-align: left; font-size: 10px; color: #D4AF37; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
 
         select, input {
-            width: 100%; background: #1a1a1a; border: 1px solid #333;
-            color: #fff !important; padding: 14px; border-radius: 10px;
-            margin-bottom: 20px; font-size: 16px; outline: none;
+            width: 100%; background: #151515; border: 1px solid #333;
+            color: #fff !important; padding: 15px; border-radius: 12px;
+            margin-bottom: 25px; font-size: 16px; outline: none; appearance: none;
         }
 
-        .btn-gold {
+        .gold-button-pro {
             background: linear-gradient(180deg, #F1D279 0%, #B8962E 100%);
-            color: #000; font-weight: bold; width: 100%; padding: 16px;
-            border-radius: 12px; border: none; text-transform: uppercase; cursor: pointer; font-size: 14px;
+            color: #000; font-weight: bold; width: 100%; padding: 18px;
+            border-radius: 15px; border: none; text-transform: uppercase; cursor: pointer; font-size: 15px;
         }
 
-        video { width: 100%; border-radius: 15px; margin-top: 15px; border: 1px solid #D4AF37; display: none; }
+        video { width: 100%; border-radius: 20px; margin-top: 20px; border: 1px solid #D4AF37; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="logo-header">
+    <div class="logo-box">
         <img src="https://static.wixstatic.com/media/cf12a4_309b19e9cae5446f88289a3f2d2b512c~mv2.jpg" alt="Logo">
     </div>
 
-    <h1 style="text-align: center; color: #F1D279; margin-bottom: 25px; font-size: 20px; font-weight: bold; letter-spacing: 2px;">CHECK-IN PRO</h1>
+    <h1 style="text-align: center; color: #F1D279; margin-bottom: 30px; font-weight: 900; letter-spacing: 3px;">CHECK-IN PRO</h1>
 
-    <div class="card">
-        <label>1. Kategorie wählen</label>
-        <select id="kategorie" onchange="updateObjekte()">
-            <option value="">-- Bitte wählen --</option>
+    <div class="card-pro">
+        <label>Objekt-Kategorie</label>
+        <select id="main_kat" onchange="filterNamen()">
+            <option value="">-- Wähle Kategorie --</option>
             <option value="villen">Villen</option>
             <option value="ferienhaeuser">Ferienhäuser</option>
             <option value="apartments">Apartments</option>
-            <option value="zimmer">Zimmer</option>
+            <option value="zimmer">Einzelzimmer</option>
         </select>
 
-        <label id="objektLabel">2. Objekt auswählen</label>
-        <select id="objekt_liste">
-            <option value="">Zuerst Kategorie wählen...</option>
+        <label>Name des Objekts</label>
+        <select id="sub_name">
+            <option value="">Wähle zuerst oben...</option>
         </select>
 
-        <label>3. Gast Name</label>
-        <input type="text" id="gast_name" placeholder="Vollständiger Name">
+        <label>Gast Name</label>
+        <input type="text" id="guest" placeholder="Name eintragen">
 
-        <button onclick="startApp()" class="btn-gold">Scan Starten</button>
+        <button onclick="startApp()" class="gold-button-pro">Scanner starten</button>
         
-        <video id="webcam" autoplay playsinline></video>
+        <video id="cam_view" autoplay playsinline></video>
     </div>
 
     <script>
         // HIER KANNST DU UNBEGRENZT NAMEN HINZUFÜGEN
-        const datenbank = {
-            "villen": ["Villa Sol", "Villa Luna", "Villa Mar", "Villa Paradiso"],
-            "ferienhaeuser": ["Finca Rustica", "Haus am See", "Waldhaus"],
-            "apartments": ["App. 01 - EG", "App. 02 - OG", "Penthouse"],
-            "zimmer": ["Zimmer 101", "Zimmer 102", "Suite Royal"]
+        const objekte = {
+            "villen": ["Villa Gold", "Villa Sunset", "Villa Royal", "Villa Panorama"],
+            "ferienhaeuser": ["Finca Mallorca", "Landhaus Schmidt", "Strandhaus 5"],
+            "apartments": ["Apartment A1", "Apartment B4", "Penthouse Sky"],
+            "zimmer": ["Zimmer 201", "Zimmer 202", "Zimmer 203", "Suite 01"]
         };
 
-        function updateObjekte() {
-            const kat = document.getElementById('kategorie').value;
-            const objSelect = document.getElementById('objekt_liste');
+        function filterNamen() {
+            const auswahl = document.getElementById('main_kat').value;
+            const nameDropdown = document.getElementById('sub_name');
             
             // Liste leeren
-            objSelect.innerHTML = '<option value="">-- Name wählen --</option>';
+            nameDropdown.innerHTML = '<option value="">-- Wähle Name --</option>';
 
-            if (kat && datenbank[kat]) {
-                datenbank[kat].forEach(name => {
-                    const opt = document.createElement('option');
-                    opt.value = name;
-                    opt.innerText = name;
-                    objSelect.appendChild(opt);
+            if (auswahl && objekte[auswahl]) {
+                objekte[auswahl].forEach(item => {
+                    const el = document.createElement('option');
+                    el.value = item;
+                    el.textContent = item;
+                    nameDropdown.appendChild(el);
                 });
             }
         }
 
         async function startApp() {
-            const v = document.getElementById('webcam');
-            const obj = document.getElementById('objekt_liste').value;
-            
-            if(!obj) {
-                alert("Bitte wählen Sie ein Objekt aus!");
-                return;
-            }
+            const v = document.getElementById('cam_view');
+            const n = document.getElementById('sub_name').value;
+            if(!n) return alert("Bitte Objekt auswählen!");
 
             v.style.display = "block";
             try {
-                const s = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: { ideal: "environment" } } 
-                });
+                const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 v.srcObject = s;
-            } catch (e) {
-                alert("Kamera-Fehler");
-            }
+            } catch (e) { alert("Kamera-Fehler"); }
         }
     </script>
 </body>
