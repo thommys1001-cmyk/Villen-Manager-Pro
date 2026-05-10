@@ -9,7 +9,8 @@ import {
   House,
   CalendarCheck,
   List,
-  X
+  X,
+  Buildings
 } from '@phosphor-icons/react';
 
 export const Sidebar = () => {
@@ -24,6 +25,7 @@ export const Sidebar = () => {
 
   const navItems = useMemo(() => [
     { to: '/dashboard', icon: House, label: 'Dashboard', roles: ['admin', 'rezeption', 'buchhaltung'] },
+    { to: '/properties', icon: Buildings, label: 'Immobilien', roles: ['admin'] },
     { to: '/bookings', icon: Calendar, label: 'Buchungen', roles: ['admin', 'rezeption'] },
     { to: '/availability', icon: CalendarCheck, label: 'Verfügbarkeit', roles: ['admin', 'rezeption'] },
     { to: '/calendar', icon: CalendarCheck, label: 'Kalender', roles: ['admin', 'rezeption'] },

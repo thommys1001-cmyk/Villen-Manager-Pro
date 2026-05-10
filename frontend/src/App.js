@@ -12,6 +12,7 @@ import Availability from './pages/Availability';
 import CalendarView from './pages/CalendarView';
 import CheckIn from './pages/CheckIn';
 import Accounting from './pages/Accounting';
+import Properties from './pages/Properties';
 import PublicBooking from './pages/PublicBooking';
 import './App.css';
 
@@ -68,6 +69,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Accounting />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/properties"
+            element={
+              <ProtectedRoute>
+                <Properties />
               </ProtectedRoute>
             }
           />

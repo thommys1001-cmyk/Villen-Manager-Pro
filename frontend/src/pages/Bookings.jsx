@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 
 export default function Bookings() {
   const [bookings, setBookings] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
@@ -61,9 +62,33 @@ export default function Bookings() {
     }
   }, []);
 
+  const fetchProperties = useCallback(async () => {
+    try {
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/properties`,
+        { withCredentials: true }
+      );
+      setProperties(data);
+    } catch (error) {
+      // silent fail - properties might be empty
+    }
+  }, []);
+
   useEffect(() => {
     fetchBookings();
-  }, [fetchBookings]);
+    fetchProperties();
+  }, [fetchBookings, fetchProperties]);
+
+  const handlePropertySelect = (propertyName) => {
+    const prop = properties.find(p => p.name === propertyName);
+    setFormData(prev => ({
+      ...prev,
+      room_number: propertyName,
+      room_type: prop?.category || prev.room_type,
+      price: prop?.default_price ? prop.default_price : prev.price,
+      deposit: prop?.default_deposit ? prop.default_deposit : prev.deposit,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -246,14 +271,33 @@ export default function Bookings() {
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
-                        Zimmernummer
+                        Unterkunft
                       </label>
-                      <Input
-                        value={formData.room_number}
-                        onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
-                        required
-                        data-testid="room-number-input"
-                      />
+                      {properties.length > 0 ? (
+                        <Select
+                          value={formData.room_number}
+                          onValueChange={handlePropertySelect}
+                        >
+                          <SelectTrigger data-testid="accommodation-select">
+                            <SelectValue placeholder="Unterkunft wählen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {properties.map(prop => (
+                              <SelectItem key={prop._id} value={prop.name}>
+                                {prop.name} ({prop.category})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          value={formData.room_number}
+                          onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
+                          required
+                          data-testid="room-number-input"
+                          placeholder="Erst unter Immobilien anlegen"
+                        />
+                      )}
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
@@ -366,7 +410,7 @@ export default function Bookings() {
               <TableHeader>
                 <TableRow className="bg-zinc-950 border-b border-gold-500/30">
                   <TableHead className="font-semibold text-gold-400">Gastname</TableHead>
-                  <TableHead className="font-semibold text-gold-400">Zimmer</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Unterkunft</TableHead>
                   <TableHead className="font-semibold text-gold-400">Kategorie</TableHead>
                   <TableHead className="font-semibold text-gold-400">Check-In</TableHead>
                   <TableHead className="font-semibold text-gold-400">Check-Out</TableHead>

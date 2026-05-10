@@ -167,7 +167,7 @@ export default function CheckIn() {
               <TableHeader>
                 <TableRow className="bg-zinc-950 border-b border-gold-500/30">
                   <TableHead className="font-semibold text-gold-400">Gastname</TableHead>
-                  <TableHead className="font-semibold text-gold-400">Zimmer</TableHead>
+                  <TableHead className="font-semibold text-gold-400">Unterkunft</TableHead>
                   <TableHead className="font-semibold text-gold-400">Check-In</TableHead>
                   <TableHead className="font-semibold text-gold-400">Check-Out</TableHead>
                   <TableHead className="font-semibold text-gold-400">Gäste</TableHead>
@@ -236,7 +236,7 @@ export default function CheckIn() {
                   Buchungsdetails
                 </p>
                 <div className="space-y-2 text-sm">
-                  <p><span className="font-semibold">Zimmer:</span> {selectedBooking?.room_number}</p>
+                  <p><span className="font-semibold">Unterkunft:</span> {selectedBooking?.room_number}</p>
                   <p><span className="font-semibold">Kategorie:</span> {selectedBooking?.room_type}</p>
                   <p><span className="font-semibold">Gäste:</span> {selectedBooking?.guests_count}</p>
                   <p><span className="font-semibold">Check-Out:</span> {selectedBooking?.check_out_date}</p>
@@ -278,11 +278,26 @@ export default function CheckIn() {
                     ref={webcamRef}
                     audio={false}
                     screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
                     className="w-full rounded-lg border border-gold-500/30"
                     data-testid="webcam"
                   />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="border-4 border-white/50 rounded-lg w-2/3 h-2/3"></div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={switchCamera}
+                    data-testid="switch-camera-button"
+                    className="absolute top-3 right-3 p-3 bg-zinc-950/80 hover:bg-zinc-900 rounded-full text-gold-500 border border-gold-500/40 transition-colors"
+                    title="Kamera wechseln"
+                  >
+                    <ArrowsClockwise size={22} weight="bold" />
+                  </button>
+                  <div className="absolute bottom-3 left-3 px-3 py-1 bg-zinc-950/80 rounded-full border border-gold-500/40">
+                    <span className="text-xs text-gold-400 font-semibold">
+                      {facingMode === 'environment' ? 'Rückkamera' : 'Frontkamera'}
+                    </span>
                   </div>
                   <div className="mt-4">
                     <Button

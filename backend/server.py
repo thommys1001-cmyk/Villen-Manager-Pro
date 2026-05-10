@@ -83,6 +83,10 @@ class BookingUpdate(BaseModel):
     guests_count: Optional[int] = None
     status: Optional[str] = None
 
+class ServiceItem(BaseModel):
+    name: str
+    amount: float
+
 class AccountingCreate(BaseModel):
     category: str
     description: str
@@ -90,6 +94,7 @@ class AccountingCreate(BaseModel):
     type: str
     date: str
     booking_id: Optional[str] = None
+    services: Optional[List[ServiceItem]] = None
 
 class AccountingUpdate(BaseModel):
     category: Optional[str] = None
@@ -97,6 +102,7 @@ class AccountingUpdate(BaseModel):
     amount: Optional[float] = None
     type: Optional[str] = None
     date: Optional[str] = None
+    services: Optional[List[ServiceItem]] = None
 
 class ForgotPassword(BaseModel):
     email: EmailStr

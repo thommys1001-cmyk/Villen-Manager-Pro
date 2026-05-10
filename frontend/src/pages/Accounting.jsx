@@ -4,6 +4,7 @@ import { Sidebar } from '../components/Sidebar';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import { Checkbox } from '../components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -26,8 +27,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { Plus, Download, Pencil, Trash } from '@phosphor-icons/react';
+import { Plus, Download, Pencil, Trash, X } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+
+const PRESET_SERVICES = [
+  'Garten',
+  'Heckenschneiden',
+  'Poolservice',
+  'Reinigung',
+  'Reparaturen',
+  'Wartung',
+];
 
 export default function Accounting() {
   const [entries, setEntries] = useState([]);
@@ -41,8 +51,13 @@ export default function Accounting() {
     type: 'expense',
     date: new Date().toISOString().split('T')[0],
   });
+  // services: list of { name, amount } items
+  const [services, setServices] = useState([]);
+  const [customServiceName, setCustomServiceName] = useState('');
+  const [customServiceAmount, setCustomServiceAmount] = useState('');
 
   const expenseCategories = [
+    'Service-Arbeiten',
     'Gartenarbeit',
     'Pool-Service',
     'Heckenschneiden',
@@ -70,20 +85,64 @@ export default function Accounting() {
     }
   };
 
+  const togglePresetService = (name, checked) => {
+    if (checked) {
+      setServices(prev => [...prev, { name, amount: 0 }]);
+    } else {
+      setServices(prev => prev.filter(s => s.name !== name));
+    }
+  };
+
+  const updateServiceAmount = (name, amount) => {
+    setServices(prev => prev.map(s => s.name === name ? { ...s, amount: parseFloat(amount) || 0 } : s));
+  };
+
+  const addCustomService = () => {
+    if (!customServiceName.trim()) {
+      toast.error('Bitte Bezeichnung eingeben');
+      return;
+    }
+    if (services.some(s => s.name === customServiceName.trim())) {
+      toast.error('Service bereits hinzugefügt');
+      return;
+    }
+    setServices(prev => [...prev, {
+      name: customServiceName.trim(),
+      amount: parseFloat(customServiceAmount) || 0
+    }]);
+    setCustomServiceName('');
+    setCustomServiceAmount('');
+  };
+
+  const removeService = (name) => {
+    setServices(prev => prev.filter(s => s.name !== name));
+  };
+
+  const servicesTotal = services.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const hasServices = services.length > 0;
+      const submitData = {
+        ...formData,
+        amount: hasServices ? servicesTotal : parseFloat(formData.amount) || 0,
+        services: hasServices ? services : null,
+        description: hasServices && !formData.description
+          ? services.map(s => s.name).join(', ')
+          : formData.description,
+      };
       if (editingEntry) {
         await axios.patch(
           `${process.env.REACT_APP_BACKEND_URL}/api/accounting/${editingEntry._id}`,
-          formData,
+          submitData,
           { withCredentials: true }
         );
         toast.success('Eintrag aktualisiert');
       } else {
         await axios.post(
           `${process.env.REACT_APP_BACKEND_URL}/api/accounting`,
-          formData,
+          submitData,
           { withCredentials: true }
         );
         toast.success('Eintrag erstellt');
@@ -154,6 +213,9 @@ export default function Accounting() {
       type: 'expense',
       date: new Date().toISOString().split('T')[0],
     });
+    setServices([]);
+    setCustomServiceName('');
+    setCustomServiceAmount('');
     setEditingEntry(null);
   };
 
@@ -166,6 +228,7 @@ export default function Accounting() {
       type: entry.type,
       date: entry.date.split('T')[0],
     });
+    setServices(entry.services || []);
     setShowDialog(true);
   };
 
@@ -223,7 +286,7 @@ export default function Accounting() {
                     Neuer Eintrag
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-2xl font-heading">
                       {editingEntry ? 'Eintrag bearbeiten' : 'Neuer Eintrag'}
@@ -276,28 +339,136 @@ export default function Accounting() {
                       )}
                     </div>
 
+                    {formData.type === 'expense' && (
+                      <div className="border border-gold-500/30 rounded-lg p-4 bg-zinc-950/50" data-testid="services-section">
+                        <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-3 block">
+                          Service-Arbeiten (optional)
+                        </label>
+                        <div className="space-y-2">
+                          {PRESET_SERVICES.map(svc => {
+                            const selected = services.find(s => s.name === svc);
+                            return (
+                              <div key={svc} className="flex items-center gap-3">
+                                <Checkbox
+                                  id={`svc-${svc}`}
+                                  checked={!!selected}
+                                  onCheckedChange={(c) => togglePresetService(svc, c)}
+                                  data-testid={`service-checkbox-${svc}`}
+                                  className="border-gold-500 data-[state=checked]:bg-gold-500 data-[state=checked]:text-zinc-950"
+                                />
+                                <label htmlFor={`svc-${svc}`} className="flex-1 text-sm text-gold-400 cursor-pointer">
+                                  {svc}
+                                </label>
+                                {selected && (
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="€"
+                                    value={selected.amount || ''}
+                                    onChange={(e) => updateServiceAmount(svc, e.target.value)}
+                                    data-testid={`service-amount-${svc}`}
+                                    className="w-24 h-8 text-sm"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Custom services already added (non-preset) */}
+                        {services.filter(s => !PRESET_SERVICES.includes(s.name)).length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gold-500/20 space-y-2">
+                            <p className="text-xs text-gold-600">Benutzerdefinierte Arbeiten:</p>
+                            {services.filter(s => !PRESET_SERVICES.includes(s.name)).map(s => (
+                              <div key={s.name} className="flex items-center gap-2 text-sm">
+                                <span className="flex-1 text-gold-400">{s.name}</span>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={s.amount || ''}
+                                  onChange={(e) => updateServiceAmount(s.name, e.target.value)}
+                                  className="w-24 h-8 text-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeService(s.name)}
+                                  className="text-red-500 hover:text-red-400 p-1"
+                                  data-testid={`remove-service-${s.name}`}
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Add custom service */}
+                        <div className="mt-3 pt-3 border-t border-gold-500/20">
+                          <p className="text-xs text-gold-600 mb-2">Andere verschiedene Arbeiten hinzufügen:</p>
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="Bezeichnung"
+                              value={customServiceName}
+                              onChange={(e) => setCustomServiceName(e.target.value)}
+                              data-testid="custom-service-name"
+                              className="flex-1 h-9 text-sm"
+                            />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="€"
+                              value={customServiceAmount}
+                              onChange={(e) => setCustomServiceAmount(e.target.value)}
+                              data-testid="custom-service-amount"
+                              className="w-24 h-9 text-sm"
+                            />
+                            <Button
+                              type="button"
+                              onClick={addCustomService}
+                              data-testid="add-custom-service-button"
+                              className="h-9 bg-gold-500 hover:bg-gold-600 text-zinc-950"
+                            >
+                              <Plus size={16} weight="bold" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {services.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gold-500/30 flex justify-between items-center">
+                            <span className="text-sm text-gold-500 font-semibold">Summe Services:</span>
+                            <span className="text-lg font-bold text-gold-400" data-testid="services-total">
+                              €{servicesTotal.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
-                        Beschreibung
+                        Beschreibung {services.length > 0 && <span className="text-gold-700 normal-case">(optional - sonst aus Services)</span>}
                       </label>
                       <Input
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        required
+                        required={services.length === 0}
                         data-testid="description-input"
                       />
                     </div>
 
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
-                        Betrag (€)
+                        Betrag (€) {services.length > 0 && <span className="text-gold-700 normal-case">(automatisch aus Services)</span>}
                       </label>
                       <Input
                         type="number"
                         step="0.01"
-                        value={formData.amount}
+                        value={services.length > 0 ? servicesTotal.toFixed(2) : formData.amount}
                         onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
-                        required
+                        required={services.length === 0}
+                        disabled={services.length > 0}
                         data-testid="amount-input"
                       />
                     </div>
