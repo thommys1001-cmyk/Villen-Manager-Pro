@@ -124,7 +124,7 @@ export default function PublicBooking() {
           <img 
             src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
             alt="Villen Manager Pro"
-            className="w-16 h-16 object-contain"
+            className="w-16 h-16 object-contain logo-no-bg"
           />
           <div>
             <h1 className="text-3xl font-bold tracking-wider text-gold-400 font-heading">VILLEN MANAGER PRO</h1>

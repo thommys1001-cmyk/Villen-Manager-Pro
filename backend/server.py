@@ -1056,7 +1056,7 @@ async def test_push(user: dict = Depends(get_current_user)):
 # Availability API
 @app.get("/api/availability")
 async def get_availability(start_date: str, end_date: str, user: dict = Depends(get_current_user)):
-    """Get room availability for a date range"""
+    """Get accommodation availability for a date range"""
     try:
         # Get all bookings in the date range
         bookings = list(db.bookings.find({
@@ -1069,28 +1069,38 @@ async def get_availability(start_date: str, end_date: str, user: dict = Depends(
             "status": {"$in": ["pending", "checked_in"]}
         }))
         
-        # Get occupied rooms
-        occupied_rooms = {}
+        # Get occupied accommodations
+        occupied = {}
         for booking in bookings:
-            room = booking["room_number"]
-            if room not in occupied_rooms:
-                occupied_rooms[room] = []
-            occupied_rooms[room].append({
+            name = booking.get("room_number", "")
+            if not name:
+                continue
+            if name not in occupied:
+                occupied[name] = []
+            occupied[name].append({
                 "guest_name": booking["guest_name"],
                 "check_in": booking["check_in_date"],
                 "check_out": booking["check_out_date"],
                 "status": booking["status"]
             })
         
-        # Define available rooms (you can make this dynamic from a rooms collection)
-        all_rooms = [f"{floor}{num:02d}" for floor in range(1, 4) for num in range(1, 11)]
+        # Use properties collection as source of truth
+        properties = list(db.properties.find({}, {"name": 1, "category": 1, "_id": 0}))
+        all_accommodations = [{"name": p["name"], "category": p.get("category", "")} for p in properties]
+        
+        # Include any occupied that don't yet exist as properties
+        existing_names = {a["name"] for a in all_accommodations}
+        for name in occupied.keys():
+            if name not in existing_names:
+                all_accommodations.append({"name": name, "category": ""})
         
         availability = []
-        for room in all_rooms:
+        for acc in all_accommodations:
             availability.append({
-                "room_number": room,
-                "is_available": room not in occupied_rooms,
-                "bookings": occupied_rooms.get(room, [])
+                "room_number": acc["name"],
+                "category": acc["category"],
+                "is_available": acc["name"] not in occupied,
+                "bookings": occupied.get(acc["name"], [])
             })
         
         return availability

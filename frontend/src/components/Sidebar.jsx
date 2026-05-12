@@ -52,7 +52,7 @@ export const Sidebar = () => {
         <img 
           src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
           alt="Logo" 
-          className="w-10 h-10 object-contain"
+          className="w-10 h-10 object-contain logo-no-bg"
         />
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-sm font-bold text-gold-400">
           {user?.name?.[0]?.toUpperCase()}
@@ -90,7 +90,7 @@ export const Sidebar = () => {
             <img 
               src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
               alt="Villen Manager Pro Logo" 
-              className="w-32 h-32 lg:w-40 lg:h-40 object-contain"
+              className="w-32 h-32 lg:w-40 lg:h-40 object-contain logo-no-bg"
             />
             <p className="text-xs text-gold-500 uppercase tracking-wider font-medium text-center mt-3">{user?.role}</p>
           </div>

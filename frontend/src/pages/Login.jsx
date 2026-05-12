@@ -52,7 +52,7 @@ export default function Login() {
           <img 
             src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
             alt="Villen Manager Pro"
-            className="w-48 h-48 object-contain mb-8"
+            className="w-48 h-48 object-contain mb-8 logo-no-bg"
           />
           <h2 className="text-5xl font-bold text-gold-500 font-heading mb-3 text-center">VILLEN MANAGER</h2>
           <p className="text-gold-600 text-xl tracking-[0.3em] uppercase">PRO</p>
@@ -68,7 +68,7 @@ export default function Login() {
             <img 
               src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
               alt="Logo"
-              className="w-24 h-24 object-contain"
+              className="w-24 h-24 object-contain logo-no-bg"
             />
           </div>
 

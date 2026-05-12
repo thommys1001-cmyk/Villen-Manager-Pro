@@ -62,7 +62,7 @@ export default function LandingPage() {
           <img 
             src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
             alt="Villen Manager Pro"
-            className="w-32 h-32 md:w-48 md:h-48 object-contain mb-6"
+            className="w-32 h-32 md:w-48 md:h-48 object-contain mb-6 logo-no-bg"
           />
           <h1 className="text-5xl md:text-7xl font-bold font-heading tracking-wider mb-2 text-gold-500">
             VILLEN MANAGER
@@ -242,7 +242,7 @@ export default function LandingPage() {
                 <img 
                   src="https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png" 
                   alt="Logo"
-                  className="w-12 h-12 object-contain"
+                  className="w-12 h-12 object-contain logo-no-bg"
                 />
                 <div>
                   <h3 className="text-lg font-bold font-heading text-gold-500">VILLEN MANAGER</h3>

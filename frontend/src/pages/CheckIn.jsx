@@ -222,7 +222,7 @@ export default function CheckIn() {
           setIdData(null);
         }
       }}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-heading">
               Check-In: {selectedBooking?.guest_name}
@@ -294,18 +294,28 @@ export default function CheckIn() {
                   >
                     <ArrowsClockwise size={22} weight="bold" />
                   </button>
-                  <div className="absolute bottom-3 left-3 px-3 py-1 bg-zinc-950/80 rounded-full border border-gold-500/40">
+                  <div className="absolute top-3 left-3 px-3 py-1 bg-zinc-950/80 rounded-full border border-gold-500/40">
                     <span className="text-xs text-gold-400 font-semibold">
                       {facingMode === 'environment' ? 'Rückkamera' : 'Frontkamera'}
                     </span>
                   </div>
+                  {/* Big circular shutter button overlay */}
+                  <button
+                    type="button"
+                    onClick={capturePhoto}
+                    data-testid="shutter-button"
+                    aria-label="Foto aufnehmen"
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-white/95 border-4 border-gold-500 hover:bg-gold-100 active:scale-95 transition-all shadow-2xl flex items-center justify-center"
+                  >
+                    <span className="w-12 h-12 rounded-full bg-gold-500" />
+                  </button>
                   <div className="mt-4">
                     <Button
                       onClick={capturePhoto}
                       data-testid="capture-photo-button"
-                      className="w-full bg-zinc-900 hover:bg-zinc-950 text-white"
+                      className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 font-bold text-base py-6"
                     >
-                      <Camera size={20} weight="fill" className="mr-2" />
+                      <Camera size={24} weight="fill" className="mr-2" />
                       Foto aufnehmen
                     </Button>
                   </div>
