@@ -30,6 +30,15 @@ from reportlab.pdfgen import canvas
 from pywebpush import webpush, WebPushException
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+
+# Subscription plans (server-side only - never trust frontend prices)
+SUBSCRIPTION_PLANS = {
+    "starter": {"name": "Starter", "price": 29.0, "currency": "eur", "property_limit": 10},
+    "pro": {"name": "Pro", "price": 49.0, "currency": "eur", "property_limit": 20},
+    "business": {"name": "Business", "price": 99.0, "currency": "eur", "property_limit": None},  # unlimited
+}
+TRIAL_DAYS = 7
 
 app = FastAPI()
 
@@ -42,7 +51,7 @@ app.add_middleware(
 )
 
 # MongoDB
-client = MongoClient(os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
+client = MongoClient(os.environ.get("MONGO_URL", "mongodb://localhost:27017"), tz_aware=True)
 db = client[os.environ.get("DB_NAME", "test_database")]
 
 JWT_ALGORITHM = "HS256"
@@ -212,13 +221,32 @@ async def startup_event():
             "password_hash": hashed,
             "name": "Admin",
             "role": "admin",
-            "created_at": datetime.now(timezone.utc)
+            "created_at": datetime.now(timezone.utc),
+            "subscription": {
+                "plan": "business",
+                "status": "active",
+                "trial_start": None,
+                "trial_end": None,
+                "subscription_end": datetime.now(timezone.utc) + timedelta(days=3650),
+                "stripe_customer_id": None,
+                "cancelled_at": None,
+            }
         })
     elif not verify_password(admin_password, existing["password_hash"]):
         db.users.update_one(
             {"email": admin_email},
             {"$set": {"password_hash": hash_password(admin_password)}}
         )
+    # Ensure existing admin has subscription (idempotent)
+    db.users.update_one(
+        {"email": admin_email, "subscription": {"$exists": False}},
+        {"$set": {"subscription": {
+            "plan": "business", "status": "active",
+            "trial_start": None, "trial_end": None,
+            "subscription_end": datetime.now(timezone.utc) + timedelta(days=3650),
+            "stripe_customer_id": None, "cancelled_at": None,
+        }}}
+    )
     
     # Create test users
     test_users = [
@@ -234,7 +262,13 @@ async def startup_event():
                 "password_hash": hash_password(test_user["password"]),
                 "name": test_user["name"],
                 "role": test_user["role"],
-                "created_at": datetime.now(timezone.utc)
+                "created_at": datetime.now(timezone.utc),
+                "subscription": {
+                    "plan": "business", "status": "active",
+                    "trial_start": None, "trial_end": None,
+                    "subscription_end": datetime.now(timezone.utc) + timedelta(days=3650),
+                    "stripe_customer_id": None, "cancelled_at": None,
+                }
             })
     
     # Write test credentials
@@ -267,12 +301,23 @@ async def register(user: UserRegister, response: Response):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed = hash_password(user.password)
+    now = datetime.now(timezone.utc)
+    trial_end = now + timedelta(days=TRIAL_DAYS)
     result = db.users.insert_one({
         "email": email,
         "password_hash": hashed,
         "name": user.name,
         "role": user.role,
-        "created_at": datetime.now(timezone.utc)
+        "created_at": now,
+        "subscription": {
+            "plan": "pro",  # trial gives Pro features
+            "status": "trial",
+            "trial_start": now,
+            "trial_end": trial_end,
+            "subscription_end": None,
+            "stripe_customer_id": None,
+            "cancelled_at": None,
+        }
     })
     
     user_id = str(result.inserted_id)
@@ -964,6 +1009,16 @@ async def get_public_properties():
 
 @app.post("/api/properties")
 async def create_property(prop: PropertyCreate, user: dict = Depends(get_current_user)):
+    # Enforce subscription property limit
+    sub = get_active_subscription(user["email"])
+    limit = SUBSCRIPTION_PLANS.get(sub["plan"], {}).get("property_limit")
+    if limit is not None:
+        current_count = db.properties.count_documents({})
+        if current_count >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit erreicht: Ihr {SUBSCRIPTION_PLANS[sub['plan']]['name']}-Tarif erlaubt max. {limit} Unterkünfte. Upgraden Sie für mehr."
+            )
     prop_data = prop.dict()
     prop_data["created_at"] = datetime.now(timezone.utc)
     prop_data["created_by"] = user["_id"]
@@ -1261,6 +1316,247 @@ async def get_room_types():
 @app.get("/")
 async def root():
     return {"message": "Hotel Management API"}
+
+# ==================== SUBSCRIPTION & STRIPE ====================
+
+def get_active_subscription(email: str) -> dict:
+    """Returns subscription dict with computed effective plan/status."""
+    user = db.users.find_one({"email": email})
+    if not user:
+        return {"plan": "trial", "status": "expired", "trial_end": None, "subscription_end": None}
+    sub = user.get("subscription") or {
+        "plan": "pro", "status": "trial",
+        "trial_start": user.get("created_at"),
+        "trial_end": (user.get("created_at") or datetime.now(timezone.utc)) + timedelta(days=TRIAL_DAYS),
+        "subscription_end": None, "stripe_customer_id": None, "cancelled_at": None,
+    }
+    now = datetime.now(timezone.utc)
+    # Compute effective status
+    if sub.get("status") == "trial":
+        trial_end = sub.get("trial_end")
+        if trial_end and now > trial_end:
+            sub["status"] = "expired"
+    elif sub.get("status") == "active":
+        sub_end = sub.get("subscription_end")
+        if sub_end and now > sub_end:
+            sub["status"] = "expired"
+    return sub
+
+@app.get("/api/subscription/plans")
+async def get_plans():
+    """Public endpoint for pricing display."""
+    return {
+        "plans": [
+            {"id": k, **v} for k, v in SUBSCRIPTION_PLANS.items()
+        ],
+        "trial_days": TRIAL_DAYS
+    }
+
+@app.get("/api/subscription/me")
+async def get_my_subscription(user: dict = Depends(get_current_user)):
+    sub = get_active_subscription(user["email"])
+    plan_info = SUBSCRIPTION_PLANS.get(sub.get("plan", "starter"), SUBSCRIPTION_PLANS["starter"])
+    now = datetime.now(timezone.utc)
+    days_left = 0
+    if sub.get("status") == "trial" and sub.get("trial_end"):
+        days_left = max(0, (sub["trial_end"] - now).days)
+    elif sub.get("status") == "active" and sub.get("subscription_end"):
+        days_left = max(0, (sub["subscription_end"] - now).days)
+    # Count current properties for limit display
+    property_count = db.properties.count_documents({})
+    return {
+        "plan": sub.get("plan"),
+        "plan_name": plan_info["name"],
+        "price": plan_info["price"],
+        "currency": plan_info["currency"],
+        "property_limit": plan_info["property_limit"],
+        "property_count": property_count,
+        "status": sub.get("status"),
+        "trial_end": sub.get("trial_end").isoformat() if sub.get("trial_end") else None,
+        "subscription_end": sub.get("subscription_end").isoformat() if sub.get("subscription_end") else None,
+        "days_left": days_left,
+        "trial_days": TRIAL_DAYS,
+    }
+
+class CheckoutCreateRequest(BaseModel):
+    plan: str  # starter, pro, business
+    origin_url: str
+
+@app.post("/api/subscription/checkout")
+async def create_subscription_checkout(req: CheckoutCreateRequest, user: dict = Depends(get_current_user)):
+    if req.plan not in SUBSCRIPTION_PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+    plan_info = SUBSCRIPTION_PLANS[req.plan]
+    
+    stripe_api_key = os.environ.get("STRIPE_API_KEY")
+    if not stripe_api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    host_url = req.origin_url.rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+    
+    success_url = f"{host_url}/subscription/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{host_url}/pricing"
+    
+    metadata = {
+        "user_email": user["email"],
+        "user_id": user["_id"],
+        "plan": req.plan,
+        "source": "villen_manager_pro",
+    }
+    
+    checkout_request = CheckoutSessionRequest(
+        amount=float(plan_info["price"]),
+        currency=plan_info["currency"],
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata=metadata,
+    )
+    
+    try:
+        session = await stripe_checkout.create_checkout_session(checkout_request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
+    
+    # Create payment_transactions record (MANDATORY per playbook)
+    db.payment_transactions.insert_one({
+        "session_id": session.session_id,
+        "user_email": user["email"],
+        "user_id": user["_id"],
+        "plan": req.plan,
+        "amount": float(plan_info["price"]),
+        "currency": plan_info["currency"],
+        "metadata": metadata,
+        "payment_status": "pending",
+        "status": "initiated",
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    })
+    
+    return {"url": session.url, "session_id": session.session_id}
+
+@app.get("/api/subscription/checkout/status/{session_id}")
+async def get_checkout_status(session_id: str, user: dict = Depends(get_current_user)):
+    stripe_api_key = os.environ.get("STRIPE_API_KEY")
+    if not stripe_api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    
+    # Find transaction
+    tx = db.payment_transactions.find_one({"session_id": session_id})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    if tx["user_email"] != user["email"]:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url="")
+    try:
+        checkout_status = await stripe_checkout.get_checkout_status(session_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
+    
+    # If already processed, return current status (idempotent)
+    if tx.get("payment_status") == "paid":
+        return {
+            "status": checkout_status.status,
+            "payment_status": checkout_status.payment_status,
+            "plan": tx.get("plan"),
+            "already_processed": True,
+        }
+    
+    # Update transaction
+    db.payment_transactions.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "payment_status": checkout_status.payment_status,
+            "status": checkout_status.status,
+            "updated_at": datetime.now(timezone.utc),
+        }}
+    )
+    
+    # If paid → activate subscription (only once)
+    if checkout_status.payment_status == "paid":
+        plan = tx.get("plan")
+        now = datetime.now(timezone.utc)
+        # Extend existing subscription if active, else start fresh
+        current_user = db.users.find_one({"email": user["email"]})
+        existing_sub = current_user.get("subscription", {})
+        existing_end = existing_sub.get("subscription_end")
+        if existing_sub.get("status") == "active" and existing_end and existing_end > now:
+            new_end = existing_end + timedelta(days=30)
+        else:
+            new_end = now + timedelta(days=30)
+        
+        db.users.update_one(
+            {"email": user["email"]},
+            {"$set": {
+                "subscription.plan": plan,
+                "subscription.status": "active",
+                "subscription.subscription_end": new_end,
+                "subscription.cancelled_at": None,
+            }}
+        )
+    
+    return {
+        "status": checkout_status.status,
+        "payment_status": checkout_status.payment_status,
+        "plan": tx.get("plan"),
+        "already_processed": False,
+    }
+
+@app.post("/api/webhook/stripe")
+async def stripe_webhook(request: Request):
+    stripe_api_key = os.environ.get("STRIPE_API_KEY")
+    if not stripe_api_key:
+        return {"status": "ignored"}
+    body = await request.body()
+    sig = request.headers.get("Stripe-Signature", "")
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url="")
+    try:
+        evt = await stripe_checkout.handle_webhook(body, sig)
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return {"status": "error", "detail": str(e)}
+    
+    # Process paid sessions
+    if evt.payment_status == "paid" and evt.session_id:
+        tx = db.payment_transactions.find_one({"session_id": evt.session_id})
+        if tx and tx.get("payment_status") != "paid":
+            db.payment_transactions.update_one(
+                {"session_id": evt.session_id},
+                {"$set": {"payment_status": "paid", "updated_at": datetime.now(timezone.utc)}}
+            )
+            plan = tx.get("plan")
+            email = tx.get("user_email")
+            now = datetime.now(timezone.utc)
+            current_user = db.users.find_one({"email": email})
+            if current_user:
+                existing_sub = current_user.get("subscription", {})
+                existing_end = existing_sub.get("subscription_end")
+                if existing_sub.get("status") == "active" and existing_end and existing_end > now:
+                    new_end = existing_end + timedelta(days=30)
+                else:
+                    new_end = now + timedelta(days=30)
+                db.users.update_one(
+                    {"email": email},
+                    {"$set": {
+                        "subscription.plan": plan,
+                        "subscription.status": "active",
+                        "subscription.subscription_end": new_end,
+                        "subscription.cancelled_at": None,
+                    }}
+                )
+    return {"status": "ok"}
+
+@app.post("/api/subscription/cancel")
+async def cancel_subscription(user: dict = Depends(get_current_user)):
+    db.users.update_one(
+        {"email": user["email"]},
+        {"$set": {
+            "subscription.cancelled_at": datetime.now(timezone.utc),
+        }}
+    )
+    return {"message": "Abo wird zum Ende der Laufzeit beendet"}
 
 if __name__ == "__main__":
     import uvicorn

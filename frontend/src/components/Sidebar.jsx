@@ -10,7 +10,8 @@ import {
   CalendarCheck,
   List,
   X,
-  Buildings
+  Buildings,
+  CreditCard
 } from '@phosphor-icons/react';
 
 export const Sidebar = () => {
@@ -31,6 +32,7 @@ export const Sidebar = () => {
     { to: '/calendar', icon: CalendarCheck, label: 'Kalender', roles: ['admin', 'rezeption'] },
     { to: '/check-in', icon: DoorOpen, label: 'Check-In', roles: ['admin', 'rezeption'] },
     { to: '/accounting', icon: CurrencyDollar, label: 'Buchhaltung', roles: ['admin', 'buchhaltung'] },
+    { to: '/subscription', icon: CreditCard, label: 'Mein Abo', roles: ['admin'] },
   ], []);
 
   const filteredNavItems = useMemo(

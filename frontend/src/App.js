@@ -13,6 +13,9 @@ import CalendarView from './pages/CalendarView';
 import CheckIn from './pages/CheckIn';
 import Accounting from './pages/Accounting';
 import Properties from './pages/Properties';
+import Pricing from './pages/Pricing';
+import Subscription from './pages/Subscription';
+import SubscriptionSuccess from './pages/SubscriptionSuccess';
 import PublicBooking from './pages/PublicBooking';
 import './App.css';
 
@@ -24,6 +27,23 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/book" element={<PublicBooking />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute>
+                <Subscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription/success"
+            element={
+              <ProtectedRoute>
+                <SubscriptionSuccess />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

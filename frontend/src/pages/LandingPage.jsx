@@ -73,19 +73,27 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
+              onClick={() => navigate('/pricing')}
+              data-testid="cta-start-trial"
+              className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 text-lg px-8 py-6 h-auto font-bold shadow-xl shadow-gold-500/30"
+            >
+              7 Tage gratis testen
+              <CaretRight size={24} weight="bold" className="ml-2" />
+            </Button>
+            <Button
               onClick={() => navigate('/book')}
               data-testid="cta-book-now"
-              className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-gold-400 text-lg px-8 py-6 h-auto font-bold shadow-xl shadow-gold-500/30"
+              variant="outline"
+              className="bg-transparent border-2 border-gold-500 text-gold-500 hover:bg-gold-500/10 text-lg px-8 py-6 h-auto font-semibold"
             >
               Jetzt buchen
-              <CaretRight size={24} weight="bold" className="ml-2" />
             </Button>
             <Button
               onClick={() => navigate('/login')}
               variant="outline"
-              className="bg-transparent border-2 border-gold-500 text-gold-500 hover:bg-gold-500 hover:text-gold-400 text-lg px-8 py-6 h-auto font-semibold"
+              className="bg-transparent border-2 border-gold-500/40 text-gold-400 hover:bg-gold-500/10 text-lg px-8 py-6 h-auto font-semibold"
             >
-              Mitarbeiter-Login
+              Anmelden
             </Button>
           </div>
         </div>

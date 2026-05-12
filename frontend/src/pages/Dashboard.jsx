@@ -26,6 +26,7 @@ import {
   Legend
 } from 'recharts';
 import { PushNotificationToggle } from '../components/PushNotificationToggle';
+import { TrialBanner } from '../components/TrialBanner';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -151,6 +152,7 @@ export default function Dashboard() {
     <div className="flex bg-zinc-950 min-h-screen" data-testid="dashboard-page">
       <Sidebar />
       <div className="flex-1 lg:ml-64 pt-16 lg:pt-0">
+        <TrialBanner />
         <div className="bg-zinc-950/90 backdrop-blur-xl border-b border-gold-900/30 sticky top-0 z-40">
           <div className="p-6">
             <h1 className="text-4xl font-bold tracking-tight text-gold-500 font-heading">Dashboard</h1>
