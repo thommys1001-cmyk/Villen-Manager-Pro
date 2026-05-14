@@ -149,3 +149,32 @@ for i, country in enumerate(selected_countries):
             delta=growth,
             delta_color=delta_color
         )
+st.divider()
+st.subheader("🛎️ Digitaler Check-In: Ausweis-Erfassung")
+
+# 1. Eingabe des Gastnamens zur Zuordnung
+gast_name = st.text_input("Vollständiger Name des Gastes (für die Dateibenennung)", placeholder="z.B. Max_Mustermann")
+
+if gast_name:
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Vorderseite**")
+        foto_front = st.camera_input("Scan Vorderseite", key="front")
+        
+    with col2:
+        st.write("**Rückseite**")
+        foto_back = st.camera_input("Scan Rückseite", key="back")
+
+    # 2. Speichern der Bilder, sobald sie aufgenommen wurden
+    if foto_front:
+        with open(f"data/{gast_name}_front.jpg", "wb") as f:
+            f.write(foto_front.getbuffer())
+        st.success(f"Vorderseite für {gast_name} gespeichert!")
+
+    if foto_back:
+        with open(f"data/{gast_name}_back.jpg", "wb") as f:
+            f.write(foto_back.getbuffer())
+        st.success(f"Rückseite für {gast_name} gespeichert!")
+else:
+    st.info("Bitte geben Sie zuerst den Namen des Gastes ein, um den Scan zu starten.")
