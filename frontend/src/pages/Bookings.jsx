@@ -97,6 +97,7 @@ export default function Bookings() {
     try {
       const payload = {
         ...formData,
+        email: formData.email || null,
         price: formData.price === '' ? null : parseFloat(formData.price),
         deposit: formData.deposit === '' ? null : parseFloat(formData.deposit),
         price_note: formData.price_note || null,
@@ -261,14 +262,14 @@ export default function Bookings() {
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
-                        E-Mail
+                        E-Mail <span className="text-gold-700 normal-case">(optional)</span>
                       </label>
                       <Input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
                         data-testid="guest-email-input"
+                        placeholder="gast@beispiel.de"
                       />
                     </div>
                     <div>

@@ -95,7 +95,7 @@ class UserLogin(BaseModel):
 
 class BookingCreate(BaseModel):
     guest_name: str
-    email: EmailStr
+    email: Optional[EmailStr] = None
     phone: str
     room_number: str
     room_type: str
@@ -121,6 +121,34 @@ class BookingUpdate(BaseModel):
     deposit_note: Optional[str] = None
     guests_count: Optional[int] = None
     status: Optional[str] = None
+
+# ==================== CONTACTS / CRM MODELS ====================
+
+class ContactCreate(BaseModel):
+    name: str
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
+    notes: Optional[str] = None
+    nationality: Optional[str] = None
+    id_number: Optional[str] = None
+    date_of_birth: Optional[str] = None
+
+class ContactUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
+    notes: Optional[str] = None
+    nationality: Optional[str] = None
+    id_number: Optional[str] = None
+    date_of_birth: Optional[str] = None
 
 class ServiceItem(BaseModel):
     name: str
@@ -153,6 +181,7 @@ class ResetPassword(BaseModel):
 class IDVerificationData(BaseModel):
     id_verified: bool
     id_data: Optional[dict] = None
+    id_image_base64: Optional[str] = None    # Optional ID scan image to persist in contact profile
 
 # Password hashing
 def hash_password(password: str) -> str:
@@ -276,6 +305,7 @@ async def startup_event():
     db.properties.create_index("account_id")
     db.bookings.create_index("account_id")
     db.accounting.create_index("account_id")
+    db.contacts.create_index("account_id")
     
     # ---------- Multi-Tenant Migration / Seed ----------
     admin_email = os.environ.get("ADMIN_EMAIL", "info@luxusvilla-ferien.de").lower()
@@ -665,8 +695,15 @@ async def create_booking(booking: BookingCreate, user: dict = Depends(get_curren
     booking_data["_id"] = str(result.inserted_id)
     account_oid_for_push = booking_data.pop("account_id", None)
     
-    # Send confirmation email
-    await send_booking_confirmation_email(booking_data, booking.email)
+    # CRM: auto-upsert contact for this guest
+    contact_id = upsert_contact_from_booking(account_oid_for_push, {**booking_data, "_id": result.inserted_id})
+    if contact_id:
+        db.bookings.update_one({"_id": result.inserted_id}, {"$set": {"contact_id": contact_id}})
+        booking_data["contact_id"] = contact_id
+    
+    # Send confirmation email (only if email provided)
+    if booking.email:
+        await send_booking_confirmation_email(booking_data, booking.email)
     
     # Send push notifications to account staff
     await send_push_to_all(booking_data, account_id=account_oid_for_push)
@@ -724,6 +761,21 @@ async def check_in(booking_id: str, verification: IDVerificationData, user: dict
         raise HTTPException(status_code=404, detail="Booking not found")
     
     booking = db.bookings.find_one({"_id": ObjectId(booking_id)})
+    
+    # CRM: upsert contact + attach ID scan to contact profile
+    contact_id = upsert_contact_from_booking(
+        booking.get("account_id"),
+        booking,
+        id_image_b64=verification.id_image_base64,
+        id_data=verification.id_data,
+    )
+    if contact_id:
+        db.bookings.update_one(
+            {"_id": ObjectId(booking_id)},
+            {"$set": {"contact_id": contact_id}}
+        )
+        booking["contact_id"] = contact_id
+    
     booking["_id"] = str(booking["_id"])
     booking.pop("account_id", None)
     return booking
@@ -870,6 +922,27 @@ async def export_accounting(user: dict = Depends(get_current_user)):
     
     entries = list(db.accounting.find(tenant_filter(user), {"_id": 0, "account_id": 0}))
     return entries
+
+@app.get("/api/accounting/pdf")
+async def export_accounting_pdf(user: dict = Depends(get_current_user)):
+    """Generate PDF report of accounting entries (with account branding)."""
+    if user["role"] not in ["admin", "buchhaltung"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    entries = list(db.accounting.find(tenant_filter(user)).sort("date", -1))
+    account = db.accounts.find_one({"_id": get_account_oid(user)})
+    account_info = {
+        "company_name": account.get("company_name", "") if account else "",
+        **(account.get("settings", {}) if account else {}),
+    }
+    
+    pdf_buffer = generate_accounting_pdf(entries, account_info)
+    filename = f"buchhaltung_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 # Dashboard stats
 @app.get("/api/stats/dashboard")
@@ -1126,7 +1199,89 @@ def generate_invoice_pdf(booking: dict, account_info: dict = None) -> BytesIO:
     buffer.seek(0)
     return buffer
 
-# WhatsApp Notification (Optional)
+def generate_accounting_pdf(entries: list, account_info: dict = None) -> BytesIO:
+    """Generate PDF report for accounting/Buchhaltung with account branding."""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    elements = []
+    styles = getSampleStyleSheet()
+    account_info = account_info or {}
+    company_name = account_info.get("company_name") or "Villen Manager"
+    tax_id = account_info.get("tax_id") or ""
+    vat_id = account_info.get("vat_id") or ""
+    
+    title_style = ParagraphStyle(
+        'CustomTitle', parent=styles['Heading1'], fontSize=22,
+        textColor=colors.HexColor('#D4AF37'), spaceAfter=10
+    )
+    elements.append(Paragraph(company_name, title_style))
+    if tax_id or vat_id:
+        tax_lines = []
+        if tax_id: tax_lines.append(f"Steuernummer: {tax_id}")
+        if vat_id: tax_lines.append(f"USt-IdNr.: {vat_id}")
+        elements.append(Paragraph(" · ".join(tax_lines), styles['Normal']))
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph(f"<b>BUCHHALTUNG</b> · Stand {datetime.now().strftime('%d.%m.%Y')}", styles['Heading2']))
+    elements.append(Spacer(1, 16))
+    
+    # Summary
+    total_income = sum(e.get("amount", 0) for e in entries if e.get("type") == "income")
+    total_expense = sum(e.get("amount", 0) for e in entries if e.get("type") == "expense")
+    net = total_income - total_expense
+    summary_data = [
+        ["Einnahmen", f"€{total_income:.2f}"],
+        ["Ausgaben", f"€{total_expense:.2f}"],
+        ["Nettogewinn", f"€{net:.2f}"],
+    ]
+    summary_table = Table(summary_data, colWidths=[80*mm, 60*mm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#fef3c7')),
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica-Bold'),
+        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor('#D4AF37')),
+        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor('#D4AF37')),
+        ('TEXTCOLOR', (0,-1), (-1,-1), colors.white),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 16))
+    
+    # Detail table
+    data = [["Datum", "Typ", "Kategorie", "Beschreibung", "Betrag"]]
+    for e in entries[:100]:
+        # Format date
+        d = e.get("date", "")
+        if isinstance(d, str):
+            d_display = d.split("T")[0]
+        else:
+            d_display = str(d)[:10]
+        amount = e.get("amount", 0)
+        amount_str = f"€{amount:.2f}"
+        typ = "Einnahme" if e.get("type") == "income" else "Ausgabe"
+        data.append([
+            d_display,
+            typ,
+            (e.get("category") or "")[:18],
+            (e.get("description") or "")[:35],
+            amount_str,
+        ])
+    detail_table = Table(data, colWidths=[24*mm, 22*mm, 35*mm, 60*mm, 25*mm])
+    detail_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0a0a0a')),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#D4AF37')),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,-1), 8),
+        ('ALIGN', (-1,1), (-1,-1), 'RIGHT'),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#fafafa')]),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+    ]))
+    elements.append(detail_table)
+    elements.append(Spacer(1, 18))
+    elements.append(Paragraph(f"<i>Erstellt am {datetime.now().strftime('%d.%m.%Y %H:%M')} · {len(entries)} Einträge</i>", styles['Normal']))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
 async def send_whatsapp_notification(phone_number: str, message: str):
     """Send WhatsApp notification using Twilio (optional)"""
     try:
@@ -1312,6 +1467,175 @@ async def delete_property(property_id: str, user: dict = Depends(get_current_use
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Property not found")
     return {"message": "Property deleted"}
+
+# ==================== CONTACTS (CRM) ENDPOINTS ====================
+
+def _serialize_contact(c: dict) -> dict:
+    c["_id"] = str(c["_id"])
+    c.pop("account_id", None)
+    c.pop("created_by", None)
+    if c.get("bookings"):
+        c["bookings"] = [str(b) for b in c["bookings"]]
+    return c
+
+@app.get("/api/contacts")
+async def list_contacts(user: dict = Depends(get_current_user)):
+    contacts = list(db.contacts.find(tenant_filter(user)).sort("name", ASCENDING))
+    return [_serialize_contact(c) for c in contacts]
+
+@app.get("/api/contacts/{contact_id}")
+async def get_contact(contact_id: str, user: dict = Depends(get_current_user)):
+    try:
+        oid = ObjectId(contact_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid id")
+    c = db.contacts.find_one({"_id": oid, **tenant_filter(user)})
+    if not c:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return _serialize_contact(c)
+
+@app.post("/api/contacts")
+async def create_contact(contact: ContactCreate, user: dict = Depends(get_current_user)):
+    data = contact.dict()
+    data["account_id"] = get_account_oid(user)
+    data["created_by"] = user["_id"]
+    data["created_at"] = datetime.now(timezone.utc)
+    data["id_document_url"] = None       # set by upload-id endpoint
+    data["id_document_uploaded_at"] = None
+    data["bookings"] = []                # linked booking IDs
+    result = db.contacts.insert_one(data)
+    data["_id"] = str(result.inserted_id)
+    return _serialize_contact(data)
+
+@app.patch("/api/contacts/{contact_id}")
+async def update_contact(contact_id: str, update: ContactUpdate, user: dict = Depends(get_current_user)):
+    try:
+        oid = ObjectId(contact_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid id")
+    data = {k: v for k, v in update.dict().items() if v is not None}
+    if not data:
+        raise HTTPException(status_code=400, detail="No changes")
+    res = db.contacts.update_one({"_id": oid, **tenant_filter(user)}, {"$set": data})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    c = db.contacts.find_one({"_id": oid})
+    return _serialize_contact(c)
+
+@app.delete("/api/contacts/{contact_id}")
+async def delete_contact(contact_id: str, user: dict = Depends(get_current_user)):
+    try:
+        oid = ObjectId(contact_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid id")
+    res = db.contacts.delete_one({"_id": oid, **tenant_filter(user)})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return {"message": "Contact deleted"}
+
+class ContactIdUpload(BaseModel):
+    image_base64: str   # data:image/jpeg;base64,xxx OR raw base64
+    id_data: Optional[dict] = None   # extracted ID fields
+
+@app.post("/api/contacts/{contact_id}/upload-id")
+async def upload_contact_id(contact_id: str, payload: ContactIdUpload, user: dict = Depends(get_current_user)):
+    """Attach an ID scan (data-URL) to a contact profile."""
+    try:
+        oid = ObjectId(contact_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid id")
+    
+    # Ensure data URL format for inline display
+    img = payload.image_base64
+    if not img.startswith("data:"):
+        img = f"data:image/jpeg;base64,{img}"
+    
+    update = {
+        "id_document_url": img,
+        "id_document_uploaded_at": datetime.now(timezone.utc),
+    }
+    if payload.id_data:
+        update["id_data"] = payload.id_data
+        # Auto-fill missing contact fields from scanned ID
+        scan = payload.id_data
+        if scan.get("nationality"):
+            update.setdefault("nationality", scan["nationality"])
+        if scan.get("id_number") or scan.get("document_number"):
+            update["id_number"] = scan.get("id_number") or scan.get("document_number")
+        if scan.get("date_of_birth"):
+            update["date_of_birth"] = scan["date_of_birth"]
+    
+    res = db.contacts.update_one({"_id": oid, **tenant_filter(user)}, {"$set": update})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    
+    c = db.contacts.find_one({"_id": oid})
+    return _serialize_contact(c)
+
+def upsert_contact_from_booking(account_id, booking: dict, id_image_b64: Optional[str] = None, id_data: Optional[dict] = None) -> Optional[str]:
+    """
+    Idempotent: find/create contact for booking guest within an account,
+    link the booking, optionally attach ID scan + structured data.
+    Returns the contact_id string.
+    """
+    if not booking:
+        return None
+    name = (booking.get("guest_name") or "").strip()
+    email = (booking.get("email") or "").strip().lower()
+    phone = (booking.get("phone") or "").strip()
+    if not name and not email and not phone:
+        return None
+    
+    or_clauses = []
+    if email:
+        or_clauses.append({"email": email})
+    if phone:
+        or_clauses.append({"phone": phone})
+    if not or_clauses and name:
+        or_clauses.append({"name": name})
+    
+    existing = db.contacts.find_one({"account_id": account_id, "$or": or_clauses}) if or_clauses else None
+    
+    now = datetime.now(timezone.utc)
+    booking_oid = booking.get("_id")
+    try:
+        booking_oid = ObjectId(booking_oid) if isinstance(booking_oid, str) else booking_oid
+    except Exception:
+        booking_oid = None
+    
+    set_update = {}
+    if id_image_b64:
+        img = id_image_b64 if id_image_b64.startswith("data:") else f"data:image/jpeg;base64,{id_image_b64}"
+        set_update["id_document_url"] = img
+        set_update["id_document_uploaded_at"] = now
+    if id_data:
+        set_update["id_data"] = id_data
+        if id_data.get("nationality"):
+            set_update["nationality"] = id_data["nationality"]
+        if id_data.get("id_number") or id_data.get("document_number"):
+            set_update["id_number"] = id_data.get("id_number") or id_data.get("document_number")
+        if id_data.get("date_of_birth"):
+            set_update["date_of_birth"] = id_data["date_of_birth"]
+    
+    if existing:
+        update_doc = {"$set": set_update} if set_update else {}
+        if booking_oid:
+            update_doc.setdefault("$addToSet", {})["bookings"] = booking_oid
+        if update_doc:
+            db.contacts.update_one({"_id": existing["_id"]}, update_doc)
+        return str(existing["_id"])
+    else:
+        contact_doc = {
+            "name": name,
+            "email": email or None,
+            "phone": phone or None,
+            "account_id": account_id,
+            "created_at": now,
+            "bookings": [booking_oid] if booking_oid else [],
+            **set_update,
+        }
+        result = db.contacts.insert_one(contact_doc)
+        return str(result.inserted_id)
 
 # Push Subscription Endpoints
 @app.get("/api/push/vapid-public-key")
@@ -1847,6 +2171,24 @@ async def update_account_settings(update: AccountSettingsUpdate, user: dict = De
         "owner_email": account.get("owner_email", ""),
         "settings": account.get("settings", {}),
     }
+
+class LogoUpload(BaseModel):
+    image_base64: str    # data URL or raw base64
+
+@app.post("/api/account/logo")
+async def upload_account_logo(payload: LogoUpload, user: dict = Depends(get_current_user)):
+    """Upload company logo (stored inline as base64 data URL)."""
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Nur Account-Inhaber kann Logo hochladen")
+    img = payload.image_base64
+    if not img:
+        raise HTTPException(status_code=400, detail="Empty image")
+    if not img.startswith("data:"):
+        img = f"data:image/png;base64,{img}"
+    if len(img) > 3_000_000:
+        raise HTTPException(status_code=413, detail="Logo zu groß (max. ~2 MB)")
+    db.accounts.update_one({"_id": get_account_oid(user)}, {"$set": {"settings.logo_url": img}})
+    return {"logo_url": img}
 
 # ==================== DASHBOARD QUICK VIEW ====================
 
