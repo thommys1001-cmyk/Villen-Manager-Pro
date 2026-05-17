@@ -16,6 +16,8 @@ import Properties from './pages/Properties';
 import Pricing from './pages/Pricing';
 import Subscription from './pages/Subscription';
 import SubscriptionSuccess from './pages/SubscriptionSuccess';
+import Signup from './pages/Signup';
+import Settings from './pages/Settings';
 import PublicBooking from './pages/PublicBooking';
 import './App.css';
 
@@ -26,8 +28,17 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/book" element={<PublicBooking />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/subscription"
             element={

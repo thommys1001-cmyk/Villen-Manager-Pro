@@ -55,7 +55,7 @@ export default function Pricing() {
   }, []);
 
   const handleStartTrial = () => {
-    navigate('/login?signup=1');
+    navigate('/signup');
   };
 
   const handleUpgrade = async (planId) => {

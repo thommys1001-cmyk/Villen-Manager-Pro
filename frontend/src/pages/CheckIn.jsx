@@ -240,10 +240,10 @@ export default function CheckIn() {
                   <p><span className="font-semibold">Kategorie:</span> {selectedBooking?.room_type}</p>
                   <p><span className="font-semibold">Gäste:</span> {selectedBooking?.guests_count}</p>
                   <p><span className="font-semibold">Check-Out:</span> {selectedBooking?.check_out_date}</p>
-                  <p><span className="font-semibold">Preis:</span> €{selectedBooking?.price?.toFixed(2)}</p>
-                  {selectedBooking?.deposit > 0 && (
-                    <p><span className="font-semibold">Kaution:</span> €{selectedBooking?.deposit?.toFixed(2)}</p>
-                  )}
+                  <p><span className="font-semibold">Preis:</span> {typeof selectedBooking?.price === 'number' ? `€${selectedBooking.price.toFixed(2)}` : (selectedBooking?.price_note || '—')}</p>
+                  {(typeof selectedBooking?.deposit === 'number' && selectedBooking.deposit > 0) || selectedBooking?.deposit_note ? (
+                    <p><span className="font-semibold">Kaution:</span> {typeof selectedBooking?.deposit === 'number' ? `€${selectedBooking.deposit.toFixed(2)}` : selectedBooking?.deposit_note}</p>
+                  ) : null}
                 </div>
               </div>
 

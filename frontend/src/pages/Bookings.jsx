@@ -45,6 +45,8 @@ export default function Bookings() {
     check_out_date: '',
     price: '',
     deposit: '',
+    price_note: '',
+    deposit_note: '',
     guests_count: 1,
   });
 
@@ -93,17 +95,24 @@ export default function Bookings() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        price: formData.price === '' ? null : parseFloat(formData.price),
+        deposit: formData.deposit === '' ? null : parseFloat(formData.deposit),
+        price_note: formData.price_note || null,
+        deposit_note: formData.deposit_note || null,
+      };
       if (editingBooking) {
         await axios.patch(
           `${process.env.REACT_APP_BACKEND_URL}/api/bookings/${editingBooking._id}`,
-          formData,
+          payload,
           { withCredentials: true }
         );
         toast.success('Buchung aktualisiert');
       } else {
         await axios.post(
           `${process.env.REACT_APP_BACKEND_URL}/api/bookings`,
-          formData,
+          payload,
           { withCredentials: true }
         );
         toast.success('Buchung erstellt');
@@ -167,6 +176,8 @@ export default function Bookings() {
       check_out_date: '',
       price: '',
       deposit: '',
+      price_note: '',
+      deposit_note: '',
       guests_count: 1,
     });
     setEditingBooking(null);
@@ -182,8 +193,10 @@ export default function Bookings() {
       room_type: booking.room_type,
       check_in_date: booking.check_in_date,
       check_out_date: booking.check_out_date,
-      price: booking.price,
-      deposit: booking.deposit || 0,
+      price: booking.price ?? '',
+      deposit: booking.deposit ?? '',
+      price_note: booking.price_note || '',
+      deposit_note: booking.deposit_note || '',
       guests_count: booking.guests_count,
     });
     setShowDialog(true);
@@ -356,30 +369,43 @@ export default function Bookings() {
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
-                        Preis pro Nacht (€)
+                        Preis pro Nacht (€) <span className="text-gold-700 normal-case">(optional)</span>
                       </label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                        required
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         data-testid="price-input"
-                        placeholder="z.B. 250.00"
+                        placeholder="z.B. 250.00 (leer lassen für Freitext)"
+                      />
+                      <Input
+                        value={formData.price_note}
+                        onChange={(e) => setFormData({ ...formData, price_note: e.target.value })}
+                        data-testid="price-note-input"
+                        placeholder="oder Freitext (z.B. 'auf Anfrage')"
+                        className="mt-2 text-sm"
                       />
                     </div>
                     <div>
                       <label className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-500 mb-2 block">
-                        Kaution (€)
+                        Kaution (€) <span className="text-gold-700 normal-case">(optional)</span>
                       </label>
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
                         value={formData.deposit}
-                        onChange={(e) => setFormData({ ...formData, deposit: parseFloat(e.target.value) || 0 })}
+                        onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
                         data-testid="deposit-input"
                         placeholder="z.B. 500.00"
+                      />
+                      <Input
+                        value={formData.deposit_note}
+                        onChange={(e) => setFormData({ ...formData, deposit_note: e.target.value })}
+                        data-testid="deposit-note-input"
+                        placeholder="oder Freitext"
+                        className="mt-2 text-sm"
                       />
                     </div>
                   </div>
@@ -441,8 +467,8 @@ export default function Bookings() {
                       <TableCell>{booking.room_type}</TableCell>
                       <TableCell>{booking.check_in_date}</TableCell>
                       <TableCell>{booking.check_out_date}</TableCell>
-                      <TableCell>€{booking.price.toFixed(2)}</TableCell>
-                      <TableCell>€{(booking.deposit || 0).toFixed(2)}</TableCell>
+                      <TableCell>{typeof booking.price === 'number' ? `€${booking.price.toFixed(2)}` : (booking.price_note || '—')}</TableCell>
+                      <TableCell>{typeof booking.deposit === 'number' && booking.deposit > 0 ? `€${booking.deposit.toFixed(2)}` : (booking.deposit_note || '—')}</TableCell>
                       <TableCell>{getStatusBadge(booking.status)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">

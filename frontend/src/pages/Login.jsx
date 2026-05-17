@@ -118,12 +118,16 @@ export default function Login() {
             </Button>
           </form>
 
+          <p className="mt-6 text-center text-sm text-gold-600">
+            Noch kein Konto? <a href="/signup" className="text-gold-400 hover:text-gold-300 font-semibold">7 Tage gratis testen</a>
+          </p>
+
           <div className="mt-8 p-4 bg-zinc-900 border border-gold-900/30 rounded-lg">
             <p className="text-xs font-semibold tracking-[0.1em] uppercase text-gold-600 mb-2">Test-Konten</p>
             <div className="space-y-1 text-sm text-gold-400/80">
-              <p><strong className="text-gold-500">Admin:</strong> admin@villenmanager.com / admin123</p>
-              <p><strong className="text-gold-500">Rezeption:</strong> rezeption@villenmanager.com / rezeption123</p>
-              <p><strong className="text-gold-500">Buchhaltung:</strong> buchhaltung@villenmanager.com / buchhaltung123</p>
+              <p><strong className="text-gold-500">Master Admin:</strong> info@luxusvilla-ferien.de / admin123</p>
+              <p><strong className="text-gold-500">Rezeption:</strong> rezeption@hotel.com / rezeption123</p>
+              <p><strong className="text-gold-500">Buchhaltung:</strong> buchhaltung@hotel.com / buchhaltung123</p>
             </div>
           </div>
 

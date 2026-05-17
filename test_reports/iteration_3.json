@@ -1,0 +1,47 @@
+{
+  "summary": "Iteration 3 - Tested Villen Manager Pro multi-tenant migration. Backend: 19/19 pytest passes covering signup, master admin login, account/settings RBAC, tenant isolation (properties/bookings/dashboard-stats), optional price/deposit, upcoming-checkins ordering, PDF invoice with branding, unlimited Business plan. Frontend: signup form, /settings 5 sections, login signup link, pricing/landing CTAs, optional Preis/Kaution fields with price_note all verified. One frontend bug: after successful signup, browser is redirected to /login instead of /dashboard (auth cookies are set correctly, manual nav to /settings works).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/subscription/checkout/status/{session_id}", "issue": "(pre-existing, iteration 2) emergent StripeCheckout returns 'No such checkout.session'. Acceptable per review note."},
+      {"endpoint": "GET /api/accounting/export", "issue": "(pre-existing) Returns JSON array, not CSV - should set text/csv content-type + Content-Disposition for true CSV export."},
+      {"endpoint": "POST /api/scan-id", "issue": "(pre-existing) Generic 500 on OpenAI failure; should classify (422/502)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Signup.jsx (post-submit redirect)", "issue": "After /api/auth/signup returns 200 and sets cookies, the SPA navigates to /dashboard but ProtectedRoute redirects to /login (likely because AuthContext user state isn't refreshed in time / not calling /api/auth/me after signup). User IS authenticated - visiting /settings or /bookings directly works. Suggested fix: in Signup.jsx after signup success, await auth refresh (e.g. await refreshUser()) before navigate('/dashboard'), OR have AuthContext setUser() from signup response directly.", "selector": "[data-testid=\"signup-submit\"]", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/bookings 'Neue Buchung' dialog", "issues": ["Date inputs still use browser-native <input type=date> (mm/dd/yyyy) instead of the shadcn Calendar/DatePicker - inconsistent with dark theme. Same issue noted iteration 2 on /availability."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_multitenant.py",
+    "/app/test_reports/pytest/iteration3_results.xml"
+  ],
+  "action_items": [
+    "Fix Signup.jsx post-signup redirect: ensure AuthContext is updated with the new user (from signup response) BEFORE navigate('/dashboard'), otherwise ProtectedRoute sees user=null and bounces to /login.",
+    "(optional) Replace browser-native date inputs in booking dialog with shadcn Calendar for consistent dark theme.",
+    "(optional) /api/accounting/export should return real CSV (text/csv + Content-Disposition), not JSON array."
+  ],
+  "critical_code_review_comments": [
+    "Tenant isolation is correctly enforced via tenant_filter(user) helper on all data endpoints (properties, bookings, accounting, push, availability, stats, upcoming-checkins). Verified end-to-end with 2 fresh tenants - no cross-tenant data leakage.",
+    "server.py is now ~1875 lines - strongly recommend splitting into routers (auth/account/booking/accounting/property/subscription/push) before adding more features.",
+    "ObjectId conversion in path params still raises 500 on invalid IDs (e.g. PATCH /api/bookings/INVALID) - wrap with try/except → 400.",
+    "PDF generation in /api/bookings/{id}/invoice catches all exceptions and returns 500 with str(e) leaking internals - safe error message would be better.",
+    "signup endpoint sets cookies but does NOT use the response object same way as login (uses path='/', secure=False - fine for preview, but for production secure=True is required).",
+    "AccountSettingsUpdate.company_email uses EmailStr but allows None - PATCH with empty string '' would fail validation; consider 'Optional[EmailStr]' is fine but UI should send null not '' if empty."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_multitenant.py (NEW - 19 tests covering signup, master admin, account, tenant isolation, optional price, upcoming-checkins, PDF invoice, property limits)"
+  ],
+  "success_rate": {"backend": "100% (19/19 new multi-tenant tests)", "frontend": "8/9 critical flows verified - only post-signup redirect target is broken"},
+  "test_credentials": "Master admin info@luxusvilla-ferien.de / admin123 confirmed working. Legacy rezeption@hotel.com / rezeption123 and buchhaltung@hotel.com / buchhaltung123 still work (same master account).",
+  "seed_data_creation": "Each test creates fresh tenant via /api/auth/signup with TEST_ prefixed company names. Master admin temporarily creates TEST_UNL_* properties and cleans them up.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: `cd /app && python -m pytest backend/tests/test_multitenant.py backend/tests/test_subscription_new.py -v`. Master admin email is NOW info@luxusvilla-ferien.de / admin123 (changed from admin@villenmanager.com). All data collections (properties, bookings, accounting, push_subscriptions) are account-scoped via tenant_filter(user). Old /app/backend/tests/backend_test.py uses obsolete admin@hotel.com credentials and WILL FAIL - either delete or update to use info@luxusvilla-ferien.de. Frontend post-signup redirect to /dashboard incorrectly lands on /login - AuthContext likely needs to be primed with the signup response user before navigation.",
+  "rca of the issue": "Post-signup redirect bug RCA: Signup.jsx calls /api/auth/signup which sets httpOnly access_token+refresh_token cookies and returns user data. It then calls navigate('/dashboard'). ProtectedRoute checks AuthContext.user which is still null (because /api/auth/me hasn't been called yet after signup). Result: user is bounced to /login. Mitigation: (a) AuthContext.signup() should call setUser(response.data) immediately, OR (b) Signup.jsx should await an explicit auth refresh (call /api/auth/me) before navigate. Verified backend cookies ARE set correctly because direct navigation to /settings/bookings works after the bounce."
+}

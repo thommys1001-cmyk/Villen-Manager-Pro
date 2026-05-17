@@ -11,7 +11,8 @@ import {
   List,
   X,
   Buildings,
-  CreditCard
+  CreditCard,
+  Gear
 } from '@phosphor-icons/react';
 
 export const Sidebar = () => {
@@ -32,6 +33,7 @@ export const Sidebar = () => {
     { to: '/calendar', icon: CalendarCheck, label: 'Kalender', roles: ['admin', 'rezeption'] },
     { to: '/check-in', icon: DoorOpen, label: 'Check-In', roles: ['admin', 'rezeption'] },
     { to: '/accounting', icon: CurrencyDollar, label: 'Buchhaltung', roles: ['admin', 'buchhaltung'] },
+    { to: '/settings', icon: Gear, label: 'Einstellungen', roles: ['admin'] },
     { to: '/subscription', icon: CreditCard, label: 'Mein Abo', roles: ['admin'] },
   ], []);
 

@@ -73,7 +73,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
-              onClick={() => navigate('/pricing')}
+              onClick={() => navigate('/signup')}
               data-testid="cta-start-trial"
               className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-zinc-950 text-lg px-8 py-6 h-auto font-bold shadow-xl shadow-gold-500/30"
             >

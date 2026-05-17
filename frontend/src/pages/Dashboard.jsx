@@ -27,6 +27,7 @@ import {
 } from 'recharts';
 import { PushNotificationToggle } from '../components/PushNotificationToggle';
 import { TrialBanner } from '../components/TrialBanner';
+import { UpcomingCheckIns } from '../components/UpcomingCheckIns';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -161,6 +162,9 @@ export default function Dashboard() {
         </div>
 
         <div className="p-8 space-y-8">
+          {/* Upcoming Check-Ins Widget */}
+          <UpcomingCheckIns />
+          
           {/* Stat Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {statCards.map((stat) => {

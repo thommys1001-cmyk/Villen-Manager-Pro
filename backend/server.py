@@ -56,6 +56,32 @@ db = client[os.environ.get("DB_NAME", "test_database")]
 
 JWT_ALGORITHM = "HS256"
 
+# ==================== ACCOUNTS / MULTI-TENANT MODELS ====================
+
+class AccountSettingsUpdate(BaseModel):
+    company_name: Optional[str] = None
+    company_email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    website: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
+    tax_id: Optional[str] = None          # Steuernummer
+    vat_id: Optional[str] = None          # USt-IdNr.
+    iban: Optional[str] = None
+    bic: Optional[str] = None
+    bank_name: Optional[str] = None
+    logo_url: Optional[str] = None
+
+class SignupRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str                              # Owner full name
+    company_name: str
+
+# ==================== EXISTING MODELS ====================
+
 # Pydantic Models
 class UserRegister(BaseModel):
     email: EmailStr
@@ -75,8 +101,10 @@ class BookingCreate(BaseModel):
     room_type: str
     check_in_date: str
     check_out_date: str
-    price: float
-    deposit: float = 0.0
+    price: Optional[float] = None
+    deposit: Optional[float] = None
+    price_note: Optional[str] = None       # Freitext, falls Preis als Text
+    deposit_note: Optional[str] = None
     guests_count: int = 1
 
 class BookingUpdate(BaseModel):
@@ -89,6 +117,8 @@ class BookingUpdate(BaseModel):
     check_out_date: Optional[str] = None
     price: Optional[float] = None
     deposit: Optional[float] = None
+    price_note: Optional[str] = None
+    deposit_note: Optional[str] = None
     guests_count: Optional[int] = None
     status: Optional[str] = None
 
@@ -172,12 +202,46 @@ async def get_current_user(request: Request) -> dict:
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
         user["_id"] = str(user["_id"])
+        # Convert account_id to str for downstream usage; keep raw for queries via tenant_filter
+        if user.get("account_id"):
+            user["account_id"] = str(user["account_id"])
         user.pop("password_hash", None)
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+# ==================== MULTI-TENANT HELPERS ====================
+
+def tenant_filter(user: dict) -> dict:
+    """Returns mongo filter to scope queries to user's account."""
+    acc_id = user.get("account_id")
+    if not acc_id:
+        # Defensive: legacy users without account get nothing
+        return {"account_id": "__none__"}
+    return {"account_id": ObjectId(acc_id) if isinstance(acc_id, str) else acc_id}
+
+def get_account_oid(user: dict) -> ObjectId:
+    return ObjectId(user["account_id"]) if isinstance(user["account_id"], str) else user["account_id"]
+
+def get_active_subscription_for_account(account_id) -> dict:
+    """Returns subscription dict from account doc with computed effective status."""
+    oid = ObjectId(account_id) if isinstance(account_id, str) else account_id
+    account = db.accounts.find_one({"_id": oid})
+    if not account:
+        return {"plan": "starter", "status": "expired", "trial_end": None, "subscription_end": None}
+    sub = account.get("subscription") or {}
+    now = datetime.now(timezone.utc)
+    if sub.get("status") == "trial":
+        trial_end = sub.get("trial_end")
+        if trial_end and now > trial_end:
+            sub["status"] = "expired"
+    elif sub.get("status") == "active":
+        sub_end = sub.get("subscription_end")
+        if sub_end and now > sub_end:
+            sub["status"] = "expired"
+    return sub
 
 # Brute force protection
 async def check_brute_force(identifier: str):
@@ -208,52 +272,80 @@ async def startup_event():
     db.users.create_index("email", unique=True)
     db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
     db.login_attempts.create_index("identifier")
+    db.accounts.create_index("owner_email")
+    db.properties.create_index("account_id")
+    db.bookings.create_index("account_id")
+    db.accounting.create_index("account_id")
     
-    # Seed admin
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@hotel.com")
+    # ---------- Multi-Tenant Migration / Seed ----------
+    admin_email = os.environ.get("ADMIN_EMAIL", "info@luxusvilla-ferien.de").lower()
     admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-    existing = db.users.find_one({"email": admin_email})
     
-    if existing is None:
-        hashed = hash_password(admin_password)
-        db.users.insert_one({
-            "email": admin_email,
-            "password_hash": hashed,
-            "name": "Admin",
-            "role": "admin",
-            "created_at": datetime.now(timezone.utc),
+    # Ensure master account exists
+    master_account = db.accounts.find_one({"owner_email": admin_email})
+    if not master_account:
+        # First-run cleanup: remove orphaned data from prior single-tenant version
+        db.properties.delete_many({"account_id": {"$exists": False}})
+        db.bookings.delete_many({"account_id": {"$exists": False}})
+        db.accounting.delete_many({"account_id": {"$exists": False}})
+        
+        now = datetime.now(timezone.utc)
+        master_account_doc = {
+            "owner_email": admin_email,
+            "company_name": os.environ.get("COMPANY_NAME", "Luxusvilla Ferien"),
+            "settings": {
+                "company_email": os.environ.get("COMPANY_EMAIL", "info@luxusvilla-ferien.de"),
+                "phone": os.environ.get("COMPANY_PHONE", ""),
+                "website": os.environ.get("COMPANY_WEBSITE", ""),
+                "address": os.environ.get("COMPANY_ADDRESS", ""),
+                "city": "",
+                "postal_code": "",
+                "country": "Deutschland",
+                "tax_id": "",
+                "vat_id": "",
+                "iban": "",
+                "bic": "",
+                "bank_name": "",
+                "logo_url": "",
+            },
             "subscription": {
                 "plan": "business",
                 "status": "active",
                 "trial_start": None,
                 "trial_end": None,
-                "subscription_end": datetime.now(timezone.utc) + timedelta(days=3650),
+                "subscription_end": now + timedelta(days=3650),
                 "stripe_customer_id": None,
                 "cancelled_at": None,
-            }
-        })
-    elif not verify_password(admin_password, existing["password_hash"]):
-        db.users.update_one(
-            {"email": admin_email},
-            {"$set": {"password_hash": hash_password(admin_password)}}
-        )
-    # Ensure existing admin has subscription (idempotent)
-    db.users.update_one(
-        {"email": admin_email, "subscription": {"$exists": False}},
-        {"$set": {"subscription": {
-            "plan": "business", "status": "active",
-            "trial_start": None, "trial_end": None,
-            "subscription_end": datetime.now(timezone.utc) + timedelta(days=3650),
-            "stripe_customer_id": None, "cancelled_at": None,
-        }}}
-    )
+            },
+            "created_at": now,
+        }
+        result = db.accounts.insert_one(master_account_doc)
+        master_account_id = result.inserted_id
+    else:
+        master_account_id = master_account["_id"]
     
-    # Create test users
+    # Ensure master admin user exists, linked to master account
+    existing_admin = db.users.find_one({"email": admin_email})
+    if existing_admin is None:
+        db.users.insert_one({
+            "email": admin_email,
+            "password_hash": hash_password(admin_password),
+            "name": "Master Admin",
+            "role": "admin",
+            "account_id": master_account_id,
+            "created_at": datetime.now(timezone.utc),
+        })
+    else:
+        update = {"account_id": master_account_id}
+        if not verify_password(admin_password, existing_admin["password_hash"]):
+            update["password_hash"] = hash_password(admin_password)
+        db.users.update_one({"email": admin_email}, {"$set": update, "$unset": {"subscription": ""}})
+    
+    # Optional: ensure helper test users (legacy)
     test_users = [
         {"email": "rezeption@hotel.com", "password": "rezeption123", "name": "Rezeption User", "role": "rezeption"},
         {"email": "buchhaltung@hotel.com", "password": "buchhaltung123", "name": "Buchhaltung User", "role": "buchhaltung"}
     ]
-    
     for test_user in test_users:
         existing_test = db.users.find_one({"email": test_user["email"]})
         if not existing_test:
@@ -262,62 +354,145 @@ async def startup_event():
                 "password_hash": hash_password(test_user["password"]),
                 "name": test_user["name"],
                 "role": test_user["role"],
+                "account_id": master_account_id,
                 "created_at": datetime.now(timezone.utc),
-                "subscription": {
-                    "plan": "business", "status": "active",
-                    "trial_start": None, "trial_end": None,
-                    "subscription_end": datetime.now(timezone.utc) + timedelta(days=3650),
-                    "stripe_customer_id": None, "cancelled_at": None,
-                }
             })
+        else:
+            db.users.update_one(
+                {"email": test_user["email"]},
+                {"$set": {"account_id": master_account_id}, "$unset": {"subscription": ""}}
+            )
+    
+    # Tag any legacy orphan data with the master account (best-effort migration)
+    for coll in ["properties", "bookings", "accounting", "push_subscriptions"]:
+        db[coll].update_many({"account_id": {"$exists": False}}, {"$set": {"account_id": master_account_id}})
     
     # Write test credentials
     with open("/app/memory/test_credentials.md", "w") as f:
         f.write("# Test Credentials\n\n")
-        f.write("## Admin Account\n")
+        f.write("## Master Admin (Owner)\n")
         f.write(f"- Email: {admin_email}\n")
         f.write(f"- Password: {admin_password}\n")
-        f.write(f"- Role: admin\n\n")
-        f.write("## Rezeption Account\n")
+        f.write(f"- Role: admin (Owner of master account)\n\n")
+        f.write("## Rezeption User (same account)\n")
         f.write("- Email: rezeption@hotel.com\n")
         f.write("- Password: rezeption123\n")
         f.write("- Role: rezeption\n\n")
-        f.write("## Buchhaltung Account\n")
+        f.write("## Buchhaltung User (same account)\n")
         f.write("- Email: buchhaltung@hotel.com\n")
         f.write("- Password: buchhaltung123\n")
         f.write("- Role: buchhaltung\n\n")
-        f.write("## Endpoints\n")
-        f.write("- POST /api/auth/register\n")
-        f.write("- POST /api/auth/login\n")
-        f.write("- POST /api/auth/logout\n")
-        f.write("- GET /api/auth/me\n")
+        f.write("## Signup Test\n")
+        f.write("- POST /api/auth/signup with {email, password, name, company_name}\n")
+        f.write("- Creates new tenant account with 7-day trial automatically.\n")
 
 # Auth routes
-@app.post("/api/auth/register")
-async def register(user: UserRegister, response: Response):
-    email = user.email.lower()
-    existing = db.users.find_one({"email": email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+@app.post("/api/auth/signup")
+async def signup(req: SignupRequest, response: Response):
+    """Self-Service signup. Creates new tenant account + owner user with 7-day trial."""
+    email = req.email.lower().strip()
+    if not req.password or len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Passwort muss mindestens 6 Zeichen lang sein")
+    if db.users.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="E-Mail bereits registriert")
     
-    hashed = hash_password(user.password)
     now = datetime.now(timezone.utc)
     trial_end = now + timedelta(days=TRIAL_DAYS)
-    result = db.users.insert_one({
-        "email": email,
-        "password_hash": hashed,
-        "name": user.name,
-        "role": user.role,
-        "created_at": now,
+    
+    # Create account first
+    account_doc = {
+        "owner_email": email,
+        "company_name": req.company_name.strip(),
+        "settings": {
+            "company_email": email,
+            "phone": "",
+            "website": "",
+            "address": "",
+            "city": "",
+            "postal_code": "",
+            "country": "Deutschland",
+            "tax_id": "",
+            "vat_id": "",
+            "iban": "",
+            "bic": "",
+            "bank_name": "",
+            "logo_url": "",
+        },
         "subscription": {
-            "plan": "pro",  # trial gives Pro features
+            "plan": "pro",            # Trial unlocks Pro features
             "status": "trial",
             "trial_start": now,
             "trial_end": trial_end,
             "subscription_end": None,
             "stripe_customer_id": None,
             "cancelled_at": None,
-        }
+        },
+        "created_at": now,
+    }
+    account_result = db.accounts.insert_one(account_doc)
+    account_id = account_result.inserted_id
+    
+    # Create owner user
+    user_result = db.users.insert_one({
+        "email": email,
+        "password_hash": hash_password(req.password),
+        "name": req.name,
+        "role": "admin",
+        "account_id": account_id,
+        "created_at": now,
+    })
+    user_id = str(user_result.inserted_id)
+    
+    access_token = create_access_token(user_id, email, "admin")
+    refresh_token = create_refresh_token(user_id)
+    response.set_cookie("access_token", access_token, httponly=True, secure=False, samesite="lax", max_age=900, path="/")
+    response.set_cookie("refresh_token", refresh_token, httponly=True, secure=False, samesite="lax", max_age=604800, path="/")
+    
+    return {
+        "_id": user_id,
+        "email": email,
+        "name": req.name,
+        "role": "admin",
+        "account_id": str(account_id),
+        "company_name": req.company_name,
+        "trial_days": TRIAL_DAYS,
+    }
+
+@app.post("/api/auth/register")
+async def register(user: UserRegister, response: Response):
+    """Legacy register - now auto-creates account same as signup."""
+    email = user.email.lower()
+    existing = db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    now = datetime.now(timezone.utc)
+    trial_end = now + timedelta(days=TRIAL_DAYS)
+    
+    account_result = db.accounts.insert_one({
+        "owner_email": email,
+        "company_name": user.name,
+        "settings": {
+            "company_email": email, "phone": "", "website": "", "address": "",
+            "city": "", "postal_code": "", "country": "Deutschland",
+            "tax_id": "", "vat_id": "", "iban": "", "bic": "", "bank_name": "", "logo_url": "",
+        },
+        "subscription": {
+            "plan": "pro", "status": "trial",
+            "trial_start": now, "trial_end": trial_end,
+            "subscription_end": None, "stripe_customer_id": None, "cancelled_at": None,
+        },
+        "created_at": now,
+    })
+    account_id = account_result.inserted_id
+    
+    result = db.users.insert_one({
+        "email": email,
+        "password_hash": hash_password(user.password),
+        "name": user.name,
+        "role": user.role if user.role in ("admin", "rezeption", "buchhaltung") else "admin",
+        "account_id": account_id,
+        "created_at": now,
     })
     
     user_id = str(result.inserted_id)
@@ -470,9 +645,10 @@ async def reset_password(data: ResetPassword):
 # Booking routes
 @app.get("/api/bookings")
 async def get_bookings(user: dict = Depends(get_current_user)):
-    bookings = list(db.bookings.find())
+    bookings = list(db.bookings.find(tenant_filter(user)))
     for booking in bookings:
         booking["_id"] = str(booking["_id"])
+        booking.pop("account_id", None)
     return bookings
 
 @app.post("/api/bookings")
@@ -483,21 +659,27 @@ async def create_booking(booking: BookingCreate, user: dict = Depends(get_curren
     booking_data["id_data"] = None
     booking_data["created_at"] = datetime.now(timezone.utc)
     booking_data["created_by"] = user["_id"]
+    booking_data["account_id"] = get_account_oid(user)
     
     result = db.bookings.insert_one(booking_data)
     booking_data["_id"] = str(result.inserted_id)
+    account_oid_for_push = booking_data.pop("account_id", None)
     
     # Send confirmation email
     await send_booking_confirmation_email(booking_data, booking.email)
+    
+    # Send push notifications to account staff
+    await send_push_to_all(booking_data, account_id=account_oid_for_push)
     
     return booking_data
 
 @app.get("/api/bookings/{booking_id}")
 async def get_booking(booking_id: str, user: dict = Depends(get_current_user)):
-    booking = db.bookings.find_one({"_id": ObjectId(booking_id)})
+    booking = db.bookings.find_one({"_id": ObjectId(booking_id), **tenant_filter(user)})
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     booking["_id"] = str(booking["_id"])
+    booking.pop("account_id", None)
     return booking
 
 @app.patch("/api/bookings/{booking_id}")
@@ -506,17 +688,21 @@ async def update_booking(booking_id: str, update: BookingUpdate, user: dict = De
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    result = db.bookings.update_one({"_id": ObjectId(booking_id)}, {"$set": update_data})
+    result = db.bookings.update_one(
+        {"_id": ObjectId(booking_id), **tenant_filter(user)},
+        {"$set": update_data}
+    )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Booking not found")
     
     booking = db.bookings.find_one({"_id": ObjectId(booking_id)})
     booking["_id"] = str(booking["_id"])
+    booking.pop("account_id", None)
     return booking
 
 @app.delete("/api/bookings/{booking_id}")
 async def delete_booking(booking_id: str, user: dict = Depends(get_current_user)):
-    result = db.bookings.delete_one({"_id": ObjectId(booking_id)})
+    result = db.bookings.delete_one({"_id": ObjectId(booking_id), **tenant_filter(user)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Booking not found")
     return {"message": "Booking deleted"}
@@ -530,17 +716,21 @@ async def check_in(booking_id: str, verification: IDVerificationData, user: dict
         "id_data": verification.id_data
     }
     
-    result = db.bookings.update_one({"_id": ObjectId(booking_id)}, {"$set": update_data})
+    result = db.bookings.update_one(
+        {"_id": ObjectId(booking_id), **tenant_filter(user)},
+        {"$set": update_data}
+    )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Booking not found")
     
     booking = db.bookings.find_one({"_id": ObjectId(booking_id)})
     booking["_id"] = str(booking["_id"])
+    booking.pop("account_id", None)
     return booking
 
 @app.post("/api/bookings/{booking_id}/check-out")
 async def check_out(booking_id: str, user: dict = Depends(get_current_user)):
-    booking = db.bookings.find_one({"_id": ObjectId(booking_id)})
+    booking = db.bookings.find_one({"_id": ObjectId(booking_id), **tenant_filter(user)})
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
@@ -549,21 +739,24 @@ async def check_out(booking_id: str, user: dict = Depends(get_current_user)):
         "check_out_time": datetime.now(timezone.utc)
     }
     
-    db.bookings.update_one({"_id": ObjectId(booking_id)}, {"$set": update_data})
+    db.bookings.update_one({"_id": ObjectId(booking_id), **tenant_filter(user)}, {"$set": update_data})
     
-    # Create income entry
+    # Create income entry (price might be None now)
+    income_amount = float(booking.get("price") or 0)
     db.accounting.insert_one({
         "category": "Buchung",
-        "description": f"Check-out: {booking['guest_name']} - Zimmer {booking['room_number']}",
-        "amount": booking["price"],
+        "description": f"Check-out: {booking['guest_name']} - Unterkunft {booking.get('room_number','')}",
+        "amount": income_amount,
         "type": "income",
         "date": datetime.now(timezone.utc).isoformat(),
         "booking_id": str(booking["_id"]),
         "created_by": user["_id"],
+        "account_id": get_account_oid(user),
         "created_at": datetime.now(timezone.utc)
     })
     
     booking["_id"] = str(booking["_id"])
+    booking.pop("account_id", None)
     booking["status"] = "checked_out"
     booking["check_out_time"] = update_data["check_out_time"]
     return booking
@@ -617,9 +810,10 @@ async def get_accounting(user: dict = Depends(get_current_user)):
     if user["role"] not in ["admin", "buchhaltung"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    entries = list(db.accounting.find())
+    entries = list(db.accounting.find(tenant_filter(user)))
     for entry in entries:
         entry["_id"] = str(entry["_id"])
+        entry.pop("account_id", None)
         if entry.get("booking_id"):
             entry["booking_id"] = str(entry["booking_id"])
     return entries
@@ -631,6 +825,7 @@ async def create_accounting(entry: AccountingCreate, user: dict = Depends(get_cu
     
     entry_data = entry.dict()
     entry_data["created_by"] = user["_id"]
+    entry_data["account_id"] = get_account_oid(user)
     entry_data["created_at"] = datetime.now(timezone.utc)
     
     result = db.accounting.insert_one(entry_data)
@@ -646,12 +841,16 @@ async def update_accounting(entry_id: str, update: AccountingUpdate, user: dict 
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    result = db.accounting.update_one({"_id": ObjectId(entry_id)}, {"$set": update_data})
+    result = db.accounting.update_one(
+        {"_id": ObjectId(entry_id), **tenant_filter(user)},
+        {"$set": update_data}
+    )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Entry not found")
     
     entry = db.accounting.find_one({"_id": ObjectId(entry_id)})
     entry["_id"] = str(entry["_id"])
+    entry.pop("account_id", None)
     return entry
 
 @app.delete("/api/accounting/{entry_id}")
@@ -659,7 +858,7 @@ async def delete_accounting(entry_id: str, user: dict = Depends(get_current_user
     if user["role"] not in ["admin", "buchhaltung"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    result = db.accounting.delete_one({"_id": ObjectId(entry_id)})
+    result = db.accounting.delete_one({"_id": ObjectId(entry_id), **tenant_filter(user)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Entry not found")
     return {"message": "Entry deleted"}
@@ -669,26 +868,27 @@ async def export_accounting(user: dict = Depends(get_current_user)):
     if user["role"] not in ["admin", "buchhaltung"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    entries = list(db.accounting.find({}, {"_id": 0}))
+    entries = list(db.accounting.find(tenant_filter(user), {"_id": 0, "account_id": 0}))
     return entries
 
 # Dashboard stats
 @app.get("/api/stats/dashboard")
 async def dashboard_stats(user: dict = Depends(get_current_user)):
-    total_bookings = db.bookings.count_documents({})
-    checked_in = db.bookings.count_documents({"status": "checked_in"})
-    pending = db.bookings.count_documents({"status": "pending"})
+    tf = tenant_filter(user)
+    total_bookings = db.bookings.count_documents(tf)
+    checked_in = db.bookings.count_documents({**tf, "status": "checked_in"})
+    pending = db.bookings.count_documents({**tf, "status": "pending"})
     
     # Revenue calculation
     income_pipeline = [
-        {"$match": {"type": "income"}},
+        {"$match": {**tf, "type": "income"}},
         {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
     ]
     income_result = list(db.accounting.aggregate(income_pipeline))
     total_income = income_result[0]["total"] if income_result else 0
     
     expense_pipeline = [
-        {"$match": {"type": "expense"}},
+        {"$match": {**tf, "type": "expense"}},
         {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
     ]
     expense_result = list(db.accounting.aggregate(expense_pipeline))
@@ -791,29 +991,53 @@ async def send_booking_confirmation_email(booking_data: dict, guest_email: str):
         return False
 
 # PDF Invoice Generation
-def generate_invoice_pdf(booking: dict) -> BytesIO:
-    """Generate PDF invoice for a booking"""
+def generate_invoice_pdf(booking: dict, account_info: dict = None) -> BytesIO:
+    """Generate PDF invoice for a booking with account branding."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     elements = []
     styles = getSampleStyleSheet()
+    account_info = account_info or {}
     
-    # Hotel Info
-    hotel_name = os.getenv("HOTEL_NAME", "Grand Hotel")
-    hotel_address = os.getenv("HOTEL_ADDRESS", "Hauptstraße 123, 10115 Berlin")
-    hotel_phone = os.getenv("HOTEL_PHONE", "+49 30 12345678")
-    hotel_email = os.getenv("HOTEL_EMAIL", "info@hotel.com")
+    # Branding (from account settings)
+    company_name = account_info.get("company_name") or "Villen Manager"
+    company_address = account_info.get("address") or ""
+    company_city = account_info.get("city") or ""
+    company_postal = account_info.get("postal_code") or ""
+    company_country = account_info.get("country") or ""
+    company_phone = account_info.get("phone") or ""
+    company_email = account_info.get("company_email") or ""
+    company_website = account_info.get("website") or ""
+    tax_id = account_info.get("tax_id") or ""
+    vat_id = account_info.get("vat_id") or ""
+    iban = account_info.get("iban") or ""
+    bic = account_info.get("bic") or ""
+    bank_name = account_info.get("bank_name") or ""
     
     # Title
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
         fontSize=24,
-        textColor=colors.HexColor('#3b82f6'),
+        textColor=colors.HexColor('#D4AF37'),
         spaceAfter=12
     )
-    elements.append(Paragraph(hotel_name, title_style))
-    elements.append(Paragraph(f"{hotel_address}<br/>{hotel_phone}<br/>{hotel_email}", styles['Normal']))
+    elements.append(Paragraph(company_name, title_style))
+    address_lines = []
+    if company_address:
+        address_lines.append(company_address)
+    if company_postal or company_city:
+        address_lines.append(f"{company_postal} {company_city}".strip())
+    if company_country:
+        address_lines.append(company_country)
+    if company_phone:
+        address_lines.append(f"Tel: {company_phone}")
+    if company_email:
+        address_lines.append(f"E-Mail: {company_email}")
+    if company_website:
+        address_lines.append(f"Web: {company_website}")
+    if address_lines:
+        elements.append(Paragraph("<br/>".join(address_lines), styles['Normal']))
     elements.append(Spacer(1, 20))
     
     # Invoice Title
@@ -826,38 +1050,48 @@ def generate_invoice_pdf(booking: dict) -> BytesIO:
     elements.append(Paragraph(f"<b>Telefon:</b> {booking.get('phone', 'N/A')}", styles['Normal']))
     elements.append(Spacer(1, 20))
     
+    # Compute totals (handle None prices)
+    price = booking.get('price')
+    deposit = booking.get('deposit') or 0
+    price_str = f"€{price:.2f}" if isinstance(price, (int, float)) else (booking.get('price_note') or '—')
+    deposit_str = f"€{deposit:.2f}" if isinstance(deposit, (int, float)) and deposit > 0 else (booking.get('deposit_note') or '')
+    
+    total_value = 0
+    if isinstance(price, (int, float)):
+        total_value += float(price)
+    if isinstance(deposit, (int, float)):
+        total_value += float(deposit)
+    
     # Booking Details Table
     data = [
         ['Beschreibung', 'Details', 'Betrag'],
-        ['Zimmernummer', booking.get('room_number', 'N/A'), ''],
+        ['Unterkunft', booking.get('room_number', 'N/A'), ''],
         ['Kategorie', booking.get('room_type', 'N/A'), ''],
         ['Check-In', booking.get('check_in_date', 'N/A'), ''],
         ['Check-Out', booking.get('check_out_date', 'N/A'), ''],
         ['Anzahl Gäste', str(booking.get('guests_count', 1)), ''],
         ['', '', ''],
-        ['Übernachtungspreis', '', f"€{booking.get('price', 0):.2f}"],
+        ['Übernachtungspreis', '', price_str],
     ]
     
-    # Add deposit if exists
-    deposit = booking.get('deposit', 0) or 0
-    if deposit > 0:
-        data.append(['Kaution (Sicherheitsleistung)', '', f"€{deposit:.2f}"])
-        data.append(['', '', ''])
-        data.append(['GESAMTBETRAG', '', f"€{(booking.get('price', 0) + deposit):.2f}"])
+    if deposit_str:
+        data.append(['Kaution (Sicherheitsleistung)', '', deposit_str])
+    data.append(['', '', ''])
+    if total_value > 0:
+        data.append(['GESAMTBETRAG', '', f"€{total_value:.2f}"])
     else:
-        data.append(['', '', ''])
-        data.append(['GESAMTBETRAG', '', f"€{booking.get('price', 0):.2f}"])
+        data.append(['GESAMTBETRAG', '', booking.get('price_note') or '—'])
     
     table = Table(data, colWidths=[60*mm, 70*mm, 40*mm])
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#D4AF37')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#0a0a0a')),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e5e7eb')),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#F1D279')),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
         ('GRID', (0, 0), (-1, -2), 1, colors.grey),
         ('BOX', (0, -1), (-1, -1), 2, colors.black),
@@ -866,7 +1100,25 @@ def generate_invoice_pdf(booking: dict) -> BytesIO:
     elements.append(table)
     elements.append(Spacer(1, 30))
     
-    # Footer
+    # Payment / Tax footer
+    tax_lines = []
+    if tax_id:
+        tax_lines.append(f"Steuernummer: {tax_id}")
+    if vat_id:
+        tax_lines.append(f"USt-IdNr.: {vat_id}")
+    if tax_lines:
+        elements.append(Paragraph(" · ".join(tax_lines), styles['Normal']))
+    
+    if iban or bank_name:
+        bank_parts = []
+        if bank_name:
+            bank_parts.append(f"Bank: {bank_name}")
+        if iban:
+            bank_parts.append(f"IBAN: {iban}")
+        if bic:
+            bank_parts.append(f"BIC: {bic}")
+        elements.append(Paragraph("Bankverbindung: " + " · ".join(bank_parts), styles['Normal']))
+    elements.append(Spacer(1, 12))
     elements.append(Paragraph(f"Rechnungsdatum: {datetime.now().strftime('%d.%m.%Y')}", styles['Normal']))
     elements.append(Paragraph("Vielen Dank für Ihren Aufenthalt!", styles['Normal']))
     
@@ -925,13 +1177,15 @@ def _send_push_sync(subscription_info: dict, payload: str):
         print(f"Push error: {str(e)}")
         return False
 
-async def send_push_to_all(booking_data: dict):
-    """Send push notification about new booking to all subscribed users"""
+async def send_push_to_all(booking_data: dict, account_id=None):
+    """Send push notification about new booking to all subscribed users of an account."""
     import json as json_lib
+    price = booking_data.get('price')
+    price_str = f"€{price:.2f}" if isinstance(price, (int, float)) else (booking_data.get('price_note') or '')
     
     payload = json_lib.dumps({
         "title": "🏨 Neue Buchung eingegangen!",
-        "body": f"{booking_data.get('guest_name')} - {booking_data.get('room_type')} - €{booking_data.get('price', 0):.2f}",
+        "body": f"{booking_data.get('guest_name')} - {booking_data.get('room_type')} - {price_str}".strip(' -'),
         "icon": "https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png",
         "badge": "https://customer-assets.emergentagent.com/wingman/359d1d25-501d-49ee-acdc-7ddd114c4b2b/attachments/abc94a5694cb4db0a3fad6a16ce20ec7_icon (1).png",
         "tag": "new-booking",
@@ -941,7 +1195,8 @@ async def send_push_to_all(booking_data: dict):
         }
     })
     
-    subscriptions = list(db.push_subscriptions.find())
+    query = {"account_id": account_id} if account_id else {}
+    subscriptions = list(db.push_subscriptions.find(query))
     for sub in subscriptions:
         subscription_info = {"endpoint": sub["endpoint"], "keys": sub["keys"]}
         try:
@@ -951,7 +1206,7 @@ async def send_push_to_all(booking_data: dict):
         except Exception as e:
             print(f"Push failed: {str(e)}")
 
-async def notify_new_booking(booking_data: dict):
+async def notify_new_booking(booking_data: dict, account_id=None):
     """Send notifications for new booking - WhatsApp + Web Push"""
     hotel_phone = os.getenv("COMPANY_WHATSAPP_NUMBER") or os.getenv("HOTEL_WHATSAPP_NUMBER")
     if hotel_phone:
@@ -968,7 +1223,7 @@ Kontakt: {booking_data.get('email')} / {booking_data.get('phone')}"""
         await send_whatsapp_notification(hotel_phone, message)
     
     # Send Web Push notifications
-    await send_push_to_all(booking_data)
+    await send_push_to_all(booking_data, account_id=account_id)
 
 # Push Subscription Model
 class PushSubscriptionData(BaseModel):
@@ -996,24 +1251,28 @@ class PropertyUpdate(BaseModel):
 # Properties (Immobilien) Endpoints
 @app.get("/api/properties")
 async def get_properties(user: dict = Depends(get_current_user)):
-    properties = list(db.properties.find())
+    properties = list(db.properties.find(tenant_filter(user)))
     for p in properties:
         p["_id"] = str(p["_id"])
+        p.pop("account_id", None)
     return properties
 
 @app.get("/api/public/properties")
 async def get_public_properties():
-    """Public endpoint to list properties for booking"""
-    properties = list(db.properties.find({}, {"_id": 0, "created_by": 0}))
+    """Public endpoint - returns properties of MASTER account only (legacy)."""
+    master = db.accounts.find_one({"owner_email": os.environ.get("ADMIN_EMAIL", "info@luxusvilla-ferien.de").lower()})
+    if not master:
+        return []
+    properties = list(db.properties.find({"account_id": master["_id"]}, {"_id": 0, "created_by": 0, "account_id": 0}))
     return properties
 
 @app.post("/api/properties")
 async def create_property(prop: PropertyCreate, user: dict = Depends(get_current_user)):
-    # Enforce subscription property limit
-    sub = get_active_subscription(user["email"])
-    limit = SUBSCRIPTION_PLANS.get(sub["plan"], {}).get("property_limit")
+    # Enforce subscription property limit (per-account)
+    sub = get_active_subscription_for_account(user["account_id"])
+    limit = SUBSCRIPTION_PLANS.get(sub.get("plan", "starter"), {}).get("property_limit")
     if limit is not None:
-        current_count = db.properties.count_documents({})
+        current_count = db.properties.count_documents(tenant_filter(user))
         if current_count >= limit:
             raise HTTPException(
                 status_code=403,
@@ -1022,9 +1281,11 @@ async def create_property(prop: PropertyCreate, user: dict = Depends(get_current
     prop_data = prop.dict()
     prop_data["created_at"] = datetime.now(timezone.utc)
     prop_data["created_by"] = user["_id"]
+    prop_data["account_id"] = get_account_oid(user)
     
     result = db.properties.insert_one(prop_data)
     prop_data["_id"] = str(result.inserted_id)
+    prop_data.pop("account_id", None)
     return prop_data
 
 @app.patch("/api/properties/{property_id}")
@@ -1033,17 +1294,21 @@ async def update_property(property_id: str, update: PropertyUpdate, user: dict =
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    result = db.properties.update_one({"_id": ObjectId(property_id)}, {"$set": update_data})
+    result = db.properties.update_one(
+        {"_id": ObjectId(property_id), **tenant_filter(user)},
+        {"$set": update_data}
+    )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Property not found")
     
     prop = db.properties.find_one({"_id": ObjectId(property_id)})
     prop["_id"] = str(prop["_id"])
+    prop.pop("account_id", None)
     return prop
 
 @app.delete("/api/properties/{property_id}")
 async def delete_property(property_id: str, user: dict = Depends(get_current_user)):
-    result = db.properties.delete_one({"_id": ObjectId(property_id)})
+    result = db.properties.delete_one({"_id": ObjectId(property_id), **tenant_filter(user)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Property not found")
     return {"message": "Property deleted"}
@@ -1063,6 +1328,7 @@ async def subscribe_push(subscription: PushSubscriptionData, user: dict = Depend
         "user_id": user["_id"],
         "user_email": user["email"],
         "role": user["role"],
+        "account_id": get_account_oid(user),
         "created_at": datetime.now(timezone.utc)
     }
     
@@ -1113,14 +1379,12 @@ async def test_push(user: dict = Depends(get_current_user)):
 async def get_availability(start_date: str, end_date: str, user: dict = Depends(get_current_user)):
     """Get accommodation availability for a date range"""
     try:
-        # Get all bookings in the date range
+        tf = tenant_filter(user)
+        # Get all bookings in the date range (tenant scoped)
         bookings = list(db.bookings.find({
-            "$or": [
-                {
-                    "check_in_date": {"$lte": end_date},
-                    "check_out_date": {"$gte": start_date}
-                }
-            ],
+            **tf,
+            "check_in_date": {"$lte": end_date},
+            "check_out_date": {"$gte": start_date},
             "status": {"$in": ["pending", "checked_in"]}
         }))
         
@@ -1139,11 +1403,10 @@ async def get_availability(start_date: str, end_date: str, user: dict = Depends(
                 "status": booking["status"]
             })
         
-        # Use properties collection as source of truth
-        properties = list(db.properties.find({}, {"name": 1, "category": 1, "_id": 0}))
+        # Use properties collection (tenant scoped) as source of truth
+        properties = list(db.properties.find(tf, {"name": 1, "category": 1, "_id": 0}))
         all_accommodations = [{"name": p["name"], "category": p.get("category", "")} for p in properties]
         
-        # Include any occupied that don't yet exist as properties
         existing_names = {a["name"] for a in all_accommodations}
         for name in occupied.keys():
             if name not in existing_names:
@@ -1167,18 +1430,26 @@ async def get_availability(start_date: str, end_date: str, user: dict = Depends(
 async def download_invoice(booking_id: str, user: dict = Depends(get_current_user)):
     """Download PDF invoice for a booking"""
     try:
-        booking = db.bookings.find_one({"_id": ObjectId(booking_id)})
+        booking = db.bookings.find_one({"_id": ObjectId(booking_id), **tenant_filter(user)})
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         
-        # Generate PDF
-        pdf_buffer = generate_invoice_pdf(booking)
+        # Load account branding
+        account = db.accounts.find_one({"_id": get_account_oid(user)})
+        account_info = {
+            "company_name": account.get("company_name", "") if account else "",
+            **(account.get("settings", {}) if account else {}),
+        }
         
+        # Generate PDF (now with account branding)
+        pdf_buffer = generate_invoice_pdf(booking, account_info)
+        
+        room_num = booking.get('room_number','rechnung')
         return StreamingResponse(
             pdf_buffer,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=rechnung_{booking['room_number']}_{booking_id}.pdf"
+                "Content-Disposition": f"attachment; filename=rechnung_{room_num}_{booking_id}.pdf"
             }
         )
     except Exception as e:
@@ -1199,44 +1470,38 @@ class PublicBookingCreate(BaseModel):
 
 @app.post("/api/public/bookings")
 async def create_public_booking(booking: PublicBookingCreate):
-    """Public endpoint for online bookings (no authentication required)"""
+    """Public endpoint for online bookings (no auth) - attaches to MASTER tenant."""
     try:
-        # Check availability for the room type
+        master_email = os.environ.get("ADMIN_EMAIL", "info@luxusvilla-ferien.de").lower()
+        master_account = db.accounts.find_one({"owner_email": master_email})
+        if not master_account:
+            raise HTTPException(status_code=503, detail="Service not configured")
+        master_account_id = master_account["_id"]
+        
+        # Check availability for the room type within master account
         existing_bookings = db.bookings.count_documents({
+            "account_id": master_account_id,
             "room_type": booking.room_type,
-            "$or": [
-                {
-                    "check_in_date": {"$lte": booking.check_out_date},
-                    "check_out_date": {"$gte": booking.check_in_date}
-                }
-            ],
+            "check_in_date": {"$lte": booking.check_out_date},
+            "check_out_date": {"$gte": booking.check_in_date},
             "status": {"$in": ["pending", "checked_in"]}
         })
         
         # Get all rooms of this type (simplified: assume 5 rooms per type)
         max_rooms_per_type = 5
         if existing_bookings >= max_rooms_per_type:
-            raise HTTPException(status_code=400, detail="Keine Zimmer verfügbar für diese Daten")
+            raise HTTPException(status_code=400, detail="Keine Unterkünfte verfügbar für diese Daten")
         
-        # Assign a room number (simplified logic)
         room_number = f"{booking.room_type[0]}{existing_bookings + 1:02d}"
         
-        # Calculate price based on input or defaults
-        from datetime import datetime
         check_in = datetime.strptime(booking.check_in_date, "%Y-%m-%d")
         check_out = datetime.strptime(booking.check_out_date, "%Y-%m-%d")
         nights = (check_out - check_in).days
         
-        # Use custom price if provided, otherwise use defaults
         if booking.price_per_night is not None and booking.price_per_night > 0:
             total_price = booking.price_per_night * nights
         else:
-            price_per_night = {
-                "Villa": 500,
-                "Ferienhaus": 250,
-                "Appartment": 120,
-                "Zimmer": 80
-            }
+            price_per_night = {"Villa": 500, "Ferienhaus": 250, "Appartment": 120, "Zimmer": 80}
             total_price = price_per_night.get(booking.room_type, 100) * nights
         
         booking_data = {
@@ -1254,18 +1519,20 @@ async def create_public_booking(booking: PublicBookingCreate):
             "id_verified": False,
             "id_data": None,
             "special_requests": booking.special_requests,
+            "account_id": master_account_id,
             "created_at": datetime.now(timezone.utc),
             "booking_source": "online"
         }
         
         result = db.bookings.insert_one(booking_data)
         booking_data["_id"] = str(result.inserted_id)
+        booking_data.pop("account_id", None)
         
         # Send confirmation email
         await send_booking_confirmation_email(booking_data, booking.email)
         
-        # Send WhatsApp notification to hotel staff
-        await notify_new_booking(booking_data)
+        # Send WhatsApp + Web Push notifications to master account
+        await notify_new_booking(booking_data, account_id=master_account_id)
         
         return {
             "message": "Buchung erfolgreich erstellt!",
@@ -1274,10 +1541,6 @@ async def create_public_booking(booking: PublicBookingCreate):
             "total_price": total_price,
             "confirmation_sent": True
         }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
@@ -1320,27 +1583,11 @@ async def root():
 # ==================== SUBSCRIPTION & STRIPE ====================
 
 def get_active_subscription(email: str) -> dict:
-    """Returns subscription dict with computed effective plan/status."""
+    """DEPRECATED: kept as fallback. Use get_active_subscription_for_account instead."""
     user = db.users.find_one({"email": email})
-    if not user:
-        return {"plan": "trial", "status": "expired", "trial_end": None, "subscription_end": None}
-    sub = user.get("subscription") or {
-        "plan": "pro", "status": "trial",
-        "trial_start": user.get("created_at"),
-        "trial_end": (user.get("created_at") or datetime.now(timezone.utc)) + timedelta(days=TRIAL_DAYS),
-        "subscription_end": None, "stripe_customer_id": None, "cancelled_at": None,
-    }
-    now = datetime.now(timezone.utc)
-    # Compute effective status
-    if sub.get("status") == "trial":
-        trial_end = sub.get("trial_end")
-        if trial_end and now > trial_end:
-            sub["status"] = "expired"
-    elif sub.get("status") == "active":
-        sub_end = sub.get("subscription_end")
-        if sub_end and now > sub_end:
-            sub["status"] = "expired"
-    return sub
+    if not user or not user.get("account_id"):
+        return {"plan": "starter", "status": "expired"}
+    return get_active_subscription_for_account(user["account_id"])
 
 @app.get("/api/subscription/plans")
 async def get_plans():
@@ -1354,7 +1601,7 @@ async def get_plans():
 
 @app.get("/api/subscription/me")
 async def get_my_subscription(user: dict = Depends(get_current_user)):
-    sub = get_active_subscription(user["email"])
+    sub = get_active_subscription_for_account(user["account_id"])
     plan_info = SUBSCRIPTION_PLANS.get(sub.get("plan", "starter"), SUBSCRIPTION_PLANS["starter"])
     now = datetime.now(timezone.utc)
     days_left = 0
@@ -1362,8 +1609,8 @@ async def get_my_subscription(user: dict = Depends(get_current_user)):
         days_left = max(0, (sub["trial_end"] - now).days)
     elif sub.get("status") == "active" and sub.get("subscription_end"):
         days_left = max(0, (sub["subscription_end"] - now).days)
-    # Count current properties for limit display
-    property_count = db.properties.count_documents({})
+    # Count current properties for limit display (per-account)
+    property_count = db.properties.count_documents(tenant_filter(user))
     return {
         "plan": sub.get("plan"),
         "plan_name": plan_info["name"],
@@ -1402,6 +1649,7 @@ async def create_subscription_checkout(req: CheckoutCreateRequest, user: dict = 
     metadata = {
         "user_email": user["email"],
         "user_id": user["_id"],
+        "account_id": user["account_id"],
         "plan": req.plan,
         "source": "villen_manager_pro",
     }
@@ -1424,6 +1672,7 @@ async def create_subscription_checkout(req: CheckoutCreateRequest, user: dict = 
         "session_id": session.session_id,
         "user_email": user["email"],
         "user_id": user["_id"],
+        "account_id": get_account_oid(user),
         "plan": req.plan,
         "amount": float(plan_info["price"]),
         "currency": plan_info["currency"],
@@ -1474,21 +1723,21 @@ async def get_checkout_status(session_id: str, user: dict = Depends(get_current_
         }}
     )
     
-    # If paid → activate subscription (only once)
+    # If paid → activate subscription on ACCOUNT (only once)
     if checkout_status.payment_status == "paid":
         plan = tx.get("plan")
         now = datetime.now(timezone.utc)
-        # Extend existing subscription if active, else start fresh
-        current_user = db.users.find_one({"email": user["email"]})
-        existing_sub = current_user.get("subscription", {})
+        account_oid = tx.get("account_id") or get_account_oid(user)
+        current_account = db.accounts.find_one({"_id": account_oid})
+        existing_sub = (current_account or {}).get("subscription", {})
         existing_end = existing_sub.get("subscription_end")
         if existing_sub.get("status") == "active" and existing_end and existing_end > now:
             new_end = existing_end + timedelta(days=30)
         else:
             new_end = now + timedelta(days=30)
         
-        db.users.update_one(
-            {"email": user["email"]},
+        db.accounts.update_one(
+            {"_id": account_oid},
             {"$set": {
                 "subscription.plan": plan,
                 "subscription.status": "active",
@@ -1527,36 +1776,94 @@ async def stripe_webhook(request: Request):
                 {"$set": {"payment_status": "paid", "updated_at": datetime.now(timezone.utc)}}
             )
             plan = tx.get("plan")
-            email = tx.get("user_email")
+            account_oid = tx.get("account_id")
             now = datetime.now(timezone.utc)
-            current_user = db.users.find_one({"email": email})
-            if current_user:
-                existing_sub = current_user.get("subscription", {})
-                existing_end = existing_sub.get("subscription_end")
-                if existing_sub.get("status") == "active" and existing_end and existing_end > now:
-                    new_end = existing_end + timedelta(days=30)
-                else:
-                    new_end = now + timedelta(days=30)
-                db.users.update_one(
-                    {"email": email},
-                    {"$set": {
-                        "subscription.plan": plan,
-                        "subscription.status": "active",
-                        "subscription.subscription_end": new_end,
-                        "subscription.cancelled_at": None,
-                    }}
-                )
+            if account_oid:
+                current_account = db.accounts.find_one({"_id": account_oid})
+                if current_account:
+                    existing_sub = current_account.get("subscription", {})
+                    existing_end = existing_sub.get("subscription_end")
+                    if existing_sub.get("status") == "active" and existing_end and existing_end > now:
+                        new_end = existing_end + timedelta(days=30)
+                    else:
+                        new_end = now + timedelta(days=30)
+                    db.accounts.update_one(
+                        {"_id": account_oid},
+                        {"$set": {
+                            "subscription.plan": plan,
+                            "subscription.status": "active",
+                            "subscription.subscription_end": new_end,
+                            "subscription.cancelled_at": None,
+                        }}
+                    )
     return {"status": "ok"}
 
 @app.post("/api/subscription/cancel")
 async def cancel_subscription(user: dict = Depends(get_current_user)):
-    db.users.update_one(
-        {"email": user["email"]},
-        {"$set": {
-            "subscription.cancelled_at": datetime.now(timezone.utc),
-        }}
+    db.accounts.update_one(
+        {"_id": get_account_oid(user)},
+        {"$set": {"subscription.cancelled_at": datetime.now(timezone.utc)}}
     )
     return {"message": "Abo wird zum Ende der Laufzeit beendet"}
+
+# ==================== ACCOUNT (TENANT SETTINGS) ENDPOINTS ====================
+
+@app.get("/api/account/me")
+async def get_account_me(user: dict = Depends(get_current_user)):
+    account = db.accounts.find_one({"_id": get_account_oid(user)})
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return {
+        "_id": str(account["_id"]),
+        "company_name": account.get("company_name", ""),
+        "owner_email": account.get("owner_email", ""),
+        "settings": account.get("settings", {}),
+    }
+
+@app.patch("/api/account/settings")
+async def update_account_settings(update: AccountSettingsUpdate, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Nur Account-Inhaber kann Einstellungen ändern")
+    
+    data = update.dict()
+    set_data = {}
+    # Top-level fields
+    if data.get("company_name") is not None:
+        set_data["company_name"] = data["company_name"]
+    # Settings sub-fields
+    settings_keys = ["company_email", "phone", "website", "address", "city", "postal_code",
+                     "country", "tax_id", "vat_id", "iban", "bic", "bank_name", "logo_url"]
+    for k in settings_keys:
+        if data.get(k) is not None:
+            set_data[f"settings.{k}"] = data[k]
+    if not set_data:
+        raise HTTPException(status_code=400, detail="Keine Änderungen")
+    
+    db.accounts.update_one({"_id": get_account_oid(user)}, {"$set": set_data})
+    account = db.accounts.find_one({"_id": get_account_oid(user)})
+    return {
+        "_id": str(account["_id"]),
+        "company_name": account.get("company_name", ""),
+        "owner_email": account.get("owner_email", ""),
+        "settings": account.get("settings", {}),
+    }
+
+# ==================== DASHBOARD QUICK VIEW ====================
+
+@app.get("/api/dashboard/upcoming-checkins")
+async def upcoming_checkins(user: dict = Depends(get_current_user)):
+    """Returns next upcoming check-ins (pending status) sorted by date."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    bookings = list(db.bookings.find({
+        **tenant_filter(user),
+        "status": "pending",
+        "check_in_date": {"$gte": today}
+    }).sort("check_in_date", ASCENDING).limit(10))
+    
+    for b in bookings:
+        b["_id"] = str(b["_id"])
+        b.pop("account_id", None)
+    return bookings
 
 if __name__ == "__main__":
     import uvicorn
