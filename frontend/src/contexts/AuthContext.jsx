@@ -35,6 +35,16 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const signup = async ({ email, password, name, company_name }) => {
+    const { data } = await axios.post(
+      `${process.env.REACT_APP_BACKEND_URL}/api/auth/signup`,
+      { email, password, name, company_name },
+      { withCredentials: true }
+    );
+    setUser(data);
+    return data;
+  };
+
   const logout = async () => {
     await axios.post(
       `${process.env.REACT_APP_BACKEND_URL}/api/auth/logout`,
@@ -44,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     setUser(false);
   };
 
-  const value = { user, loading, login, logout, checkAuth };
+  const value = { user, loading, login, logout, signup, checkAuth };
 
   return (
     <AuthContext.Provider value={value}>

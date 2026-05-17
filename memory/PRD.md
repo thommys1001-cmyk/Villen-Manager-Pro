@@ -106,20 +106,30 @@ Luxuriöse SaaS-Plattform für Verwalter & Eigentümer von Villen, Ferienhäuser
 
 ## CHANGELOG
 
-### 2026-02-12 (Latest)
-- ✅ **Subscription System** — 3 Tarife (29/49/99 €) + 7-Tage-Trial ohne CC
-- ✅ **Stripe Integration** via emergentintegrations (StripeCheckout)
-- ✅ **`/pricing`** öffentliche Preisseite
-- ✅ **`/subscription`** Abo-Verwaltung für eingeloggte Admins
-- ✅ **TrialBanner** mit Countdown auf Dashboard
-- ✅ **Property-Limit-Enforcement** beim Anlegen neuer Immobilien
-- ✅ **Verfügbarkeit umbenannt** — "Unterkunft" statt "Zimmernummer", aus Properties
-- ✅ **Check-In Shutter-Button** — großer goldener Auslöser-Knopf + Kamera-Flip funktionsfähig
-- ✅ **Buchhaltung Services** — 6 Preset-Checkboxen (Garten/Hecke/Pool/Reinigung/Reparatur/Wartung) mit individuellem €-Betrag + Custom-Add-Feld
-- ✅ **Bookings "Unterkunft" Dropdown** — gespeist aus Properties API mit Auto-Fill von Preis/Kaution
-- ✅ **Logo white halo entfernt** via `mix-blend-mode: screen`
-- ✅ **MongoClient `tz_aware=True`** Fix für Datetime-Vergleiche
-- ✅ **MARKETING.md** — komplettes FB/Insta-Werbepaket (DE+EN, 5 Ads, 5 Bilder, Targeting, Budget)
+### 2026-02-13 (Latest – Multi-Tenant)
+- ✅ **MULTI-TENANT ARCHITECTURE** — `accounts` collection introduced. Properties, Bookings, Accounting, Push Subscriptions, Payment Transactions all scoped per `account_id`.
+- ✅ **Self-Service Signup** — `POST /api/auth/signup` + new `/signup` page. Creates new tenant + owner user + 7-day trial automatically.
+- ✅ **Account Settings** — `/settings` page (admin-only) with Firmendaten, Adresse, Steuer (Steuernummer/USt-IdNr), Bankverbindung (IBAN/BIC/Bank), Branding (Logo-URL).
+- ✅ **Master Admin auf `info@luxusvilla-ferien.de`** umgezogen (Business-Tarif, unbegrenzt, 10 Jahre Laufzeit). Altes `admin@villenmanager.com` entfernt.
+- ✅ **PDF-Rechnung mit Branding** — Logo, Firmenadresse, Steuernummer, USt-IdNr., Bankverbindung werden aus Account-Settings gezogen.
+- ✅ **Optionale Preis-/Kaution-Felder** in Buchungen + zusätzliche `price_note` / `deposit_note` Freitextfelder.
+- ✅ **Dashboard Quick-View "Nächste Check-Ins"** — sortiert nach Datum aufsteigend, max. 10 anstehende Buchungen.
+- ✅ **Subscription auf Account-Level** verschoben (war vorher User-Level).
+- ✅ **AuthContext.signup()** Helper für post-signup Redirect-Bug-Fix.
+- ✅ **MongoClient `tz_aware=True`** (bereits aus Iteration 2).
+
+### 2026-02-12 (Subscription System)
+- ✅ Stripe Integration via emergentintegrations (StripeCheckout)
+- ✅ Pricing-Page öffentlich unter `/pricing`
+- ✅ Subscription Management unter `/subscription`
+- ✅ TrialBanner mit Countdown
+- ✅ Property-Limit-Enforcement
+- ✅ Verfügbarkeit "Unterkunft" statt "Zimmernummer"
+- ✅ Check-In Shutter-Button + Kamera-Flip
+- ✅ Buchhaltung Service-Checkboxen
+- ✅ Bookings Unterkunft-Dropdown
+- ✅ Logo white halo entfernt
+- ✅ MARKETING.md erstellt
 
 ### 2026-02-11 (vorher)
 - Properties-Modul + Page
@@ -128,21 +138,36 @@ Luxuriöse SaaS-Plattform für Verwalter & Eigentümer von Villen, Ferienhäuser
 - Dark-Mode überall, responsive Hamburger-Menü
 - Edelschwarz+Gold Branding
 
-## P0 / Open / Roadmap
-- [ ] **Stripe Webhook absichern** — Signature-Verification aktivieren wenn Produktiv-Keys da
-- [ ] **Stripe-Subscriptions (recurring) statt Einzelzahlung** — aktuell verlängert jede Zahlung um 30 Tage manuell; ideal wäre `mode='subscription'` mit Stripe Price IDs
-- [ ] **Resend API-Key** vom User für Passwort-Reset & Booking-Bestätigungen
-- [ ] **iOS-PWA-Push UX** — Anleitungs-Modal verfeinern (Screenshots, Video)
-- [ ] **Refactoring** — server.py (≈ 1560 Zeilen) in Router aufteilen (auth/booking/accounting/property/subscription)
-- [ ] **Accounting & Bookings Komponenten** in kleinere Dateien zerlegen
-- [ ] **DialogDescription** für Accessibility hinzufügen
-- [ ] **shadcn Calendar** statt nativer `<input type="date">` auf Availability
-- [ ] **ObjectId Try/Except** in PATCH/DELETE Endpoints (vermeidet 500 bei invalid id)
-- [ ] **Rate-Limit** auf POST /api/subscription/checkout
-- [ ] **Sora 2** für Demo-Reels (Marketing)
-- [ ] **/api/scan-id** Error-Klassifizierung (422 vs 502)
-- [ ] **/api/accounting/export** echtes CSV (content-type + attachment)
-- [ ] **Testimonials & Demo-Video** auf Pricing-Seite
+## P0 / Open / Roadmap (von User-Liste sortiert)
+
+### Phase 3 – Nächste Schritte (P0)
+- [ ] **Kontaktmanagement (CRM)** — Eigene Kontakte-Collection mit Profil-Übersicht. Beim Check-In hochgeladener Ausweis-Scan automatisch im Kontakt-Profil speichern (PDF/Bild).
+- [ ] **Buchhaltung Druck/PDF** — PDF-Export-Button mit Tabellen-Layout (Einnahmen/Ausgaben, Summe, Datum-Filter).
+- [ ] **Kontaktdaten Export** — Drucken (Print-Layout), Per E-Mail senden (`mailto:`), Per WhatsApp (`wa.me/`).
+- [ ] **Rechnungs-Branding mit Logo-Upload** — Echtes File-Upload-Endpoint (`POST /api/account/logo`) statt URL-Feld. Optional: Briefpapier-PDF als Hintergrund.
+
+### Phase 4 – Kalender & UX (P1)
+- [ ] **Gantt/Timeline-Kalender** — Zusätzliche tabellarische Balken-Ansicht mit horizontalen Booking-Balken.
+- [ ] **Color Picker** für Buchungsbalken — User wählt Farbe pro Buchung oder pro Kategorie.
+
+### Phase 5 – Onboarding & Auth (P1)
+- [ ] **OTP / Einmal-Passwort** beim Sign-up nach Stripe-Zahlung — temporäres Passwort per E-Mail, muss beim ersten Login geändert werden (braucht Resend API-Key).
+- [ ] **Resend API-Key** vom User für Passwort-Reset & Buchungs-Bestätigungen.
+- [ ] **Mitarbeiter einladen** pro Account (Admin/Rezeption/Buchhaltung) — Stripe-Tier-abhängiges Limit.
+
+### Phase 6 – Stripe & Recurring (P1)
+- [ ] **Echte Stripe-Live-Keys** für Echtgeld-Zahlungen (User braucht Stripe-Account mit hinterlegter IBAN).
+- [ ] **Stripe Webhook-Signature** aktivieren bei Live.
+- [ ] **Stripe Subscriptions (recurring)** mit Price IDs statt monatliche Einzelzahlung.
+- [ ] **Stripe Customer Portal** für Self-Service (Karten-Update, Abo-Wechsel, Rechnungs-Historie).
+
+### Phase 7 – Refactoring (P2)
+- [ ] **server.py refactoring** (≈ 1900 Zeilen) in Router-Module (auth, bookings, properties, accounting, subscription, account).
+- [ ] **Bookings.jsx / Accounting.jsx** in kleinere Komponenten zerlegen.
+- [ ] **shadcn Calendar** statt nativer `<input type="date">` für Konsistenz.
+- [ ] **/api/accounting/export** echtes CSV (Content-Type text/csv).
+- [ ] **/api/scan-id** Error-Klassifizierung (422 vs 502).
+- [ ] **Sora 2** für Demo-Reels (Marketing).
 
 ## Marketing
 - Komplette Strategie in `/app/MARKETING.md`

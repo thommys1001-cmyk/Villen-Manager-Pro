@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card } from '../components/ui/card';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     company_name: '',
@@ -30,20 +31,14 @@ export default function Signup() {
     }
     setLoading(true);
     try {
-      await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/auth/signup`,
-        {
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-          company_name: formData.company_name,
-        },
-        { withCredentials: true }
-      );
+      await signup({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        company_name: formData.company_name,
+      });
       toast.success('Konto erstellt! 7 Tage gratis aktiviert.');
       navigate('/dashboard');
-      // Reload so AuthContext refreshes
-      setTimeout(() => window.location.reload(), 100);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Registrierung fehlgeschlagen');
     } finally {
